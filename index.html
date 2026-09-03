@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Forex Calculator & TradingView Chart</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <h1>Forex Calculator</h1>
+
+    <div class="card">
+      <h2>Calculate Margin & Pip Value</h2>
+      <label>Currency Pair <span id="pairDisplay">EURUSD</span></label>
+      <select id="pairSelect" on="change:updatePairDisplay">
+        <option value="EURUSD">EUR/USD</option>
+        <option value="GBPUSD">GBP/USD</option>
+        <option value="USDJPY">USD/JPY</option>
+        <option value="AUDUSD">AUD/USD</option>
+        <option value="XAUUSD">Gold (XAU/USD)</option>
+      </select>
+
+      <div class="row">
+        <div class="col">
+          <label>Lot Size</label>
+          <input type="number" id="lotSize" step="0.01" value="1.0">
+        </div>
+        <div class="col">
+          <label>Leverage</label>
+          <input type="number" id="leverage" step="1" value="100">
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col">
+          <label>Entry Price</label>
+          <input type="number" id="entryPrice" step="0.0001" value="1.08">
+        </div>
+        <div class="col">
+          <label>Exit Price</label>
+          <input type="number" id="exitPrice" step="0.0001" value="1.09">
+        </div>
+      </div>
+
+      <button class="btn-primary" onclick="calculate()">Calculate</button>
+    </div>
+
+    <div class="card" id="results" style="display:none;">
+      <h2>Results</h2>
+      <p><strong>Pip Movement:</strong> <span id="pipMovement">0</span> pips</p>
+      <p><strong>Pip Value (per lot):</strong> <span id="pipValue">0.00</span> <span id="pipValueCurrency">USD</span></p>
+      <p><strong>Required Margin:</strong> <span id="margin">0.00</span> <span id="marginCurrency">USD</span></p>
+      <p><strong>Used Margin %:</strong> <span id="marginPercent">0</span>%</p>
+    </div>
+
+    <div class="card">
+      <h2>TradingView Chart</h2>
+      <div id="tradingview-widget"></div>
+    </div>
+  </div>
+
+  <script>
+    // Simple pip size lookup per pair
+    const pipSizes = {
+      'EURUSD': 0.0001,
+      'GBPUSD': 0.0001,
+      'USDJPY': 0.01,
+      'AUDUSD': 0.0001,
+      'XAUUSD': 0.01
+    };
+
+    const contractSizes = {
+      'EURUSD': 100000,
+      'GBPUSD': 100000,
+      'USDJPY': 100000,
+      'AUDUSD': 100000,
+      'XAUUSD': 1 // ounce, handled separately
+    };
+
+    function updatePairDisplay() {
+      const sel = document.getElementById('pairSelect').value;
+      document.getElementById('pairDisplay').textContent = sel;
+    }
+
+    function calculate() {
+      const pair = document.getElementById('pairSelect').value;
+      const lot = parseFloat(document.getElementById('lotSize').value) || 0;
+      const lever = parseInt(document.getElementById('leverage').value) || 1;
+      const entry = parseFloat(document.getElementById('entryPrice').value) || 0;
+      const exit = parseFloat(document.getElementById('exitPrice').value) || 0;
+
+      const pipSize = pipSizes[pair] || 0.0001;
+      const pipMovement = ((exit - entry) / pipSize).toFixed(2);
+      // pip value per lot = pipSize * contractSize * lot (for 4-decimal pairs, USD quote)
+      const contractSize = contractSizes[pair] || 100000;
+      const pipValue = (pipSize * contractSize * lot).toFixed(2);
+      // margin = (contractSize * lot) / lever
+      const margin = ((contractSize * lot) / lever).toFixed(2);
+      const marginPercent = (1 / lever * 100).toFixed(0);
+
+      document.getElementById('pipMovement').textContent = pipMovement + ' pips';
+      document.getElementById('pipValue').textContent = pipValue;
+      document.getElementById('pipValueCurrency').textContent = pair === 'XAUUSD' ? 'USD' : 'USD';
+      document.getElementById('margin').textContent = margin;
+      document.getElementById('marginCurrency').textContent = 'USD';
+      document.getElementById('marginPercent').textContent = marginPercent;
+
+      document.getElementById('results').style.display = 'block';
+
+      // Update TradingView widget symbol
+      const symbol = pair.replace('USD', '').toUpperCase() + 'USD';
+      const widgetScript = document.createElement('script');
+      widgetScript.type = 'text/javascript';
+      widgetScript.src = 'https://s3.tradingview.com/tv.js';
+      widgetScript.async = true;
+      widgetScript.onload = () => {
+        new TradingView.widget({
+          'autosize': true,
+          'symbol': 'FX:' + symbol,
+          'interval': 'D',
+          'timezone': 'UTC',
+          'theme': 'light',
+          'style': '1',
+          'locale': 'en',
+          'toolbar_bg': '#f1f3f6',
+          'enable_publishing': false,
+          'hide_side_toolbar': false,
+          'allow_symbol_change': true,
+          'container_id': 'tradingview-widget'
+        });
+      };
+      document.body.appendChild(widgetScript);
+    }
+
+    // Init
+    updatePairDisplay();
+  </script>
+</body>
+</html>
