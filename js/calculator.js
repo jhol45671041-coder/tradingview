@@ -256,6 +256,21 @@ function syncPriceField(inputId, oldPair, newPair, pipsOffset) {
     input.value = newSample.toFixed(priceDecimals(newPair));
 }
 
+// Sync a group of price fields together (e.g. entry + exit): only replace
+// them if ALL still hold their sample values, so a user-customized field
+// can never end up mixed with a synced one.
+function syncPriceFields(fields, oldPair, newPair) {
+    const allPristine = fields.every(f => {
+        const input = document.getElementById(f.id);
+        if (!input) return false;
+        const current = parseFloat(input.value);
+        const sample = SAMPLE_PRICES[oldPair] + (f.pipsOffset ? f.pipsOffset * getPipSize(oldPair) : 0);
+        return !isNaN(current) && Math.abs(current - sample) <= 1e-9;
+    });
+    if (!allPristine) return;
+    fields.forEach(f => syncPriceField(f.id, oldPair, newPair, f.pipsOffset));
+}
+
 // Pip Calculator
 bindPairSelect('pip-pair', (oldPair, newPair) => {
     syncPriceField('pip-price', oldPair, newPair);
@@ -277,10 +292,9 @@ bindPairSelect('margin-pair', (oldPair, newPair) => {
     calculateMargin();
 });
 
-// Pips Move Calculator (entry + exit 50 pips higher)
+// Pips Move Calculator (entry + exit 50 pips higher, synced as a group)
 bindPairSelect('move-pair', (oldPair, newPair) => {
-    syncPriceField('move-entry', oldPair, newPair);
-    syncPriceField('move-exit', oldPair, newPair, 50);
+    syncPriceFields([{ id: 'move-entry' }, { id: 'move-exit', pipsOffset: 50 }], oldPair, newPair);
     calculatePipsMove();
 });
 
