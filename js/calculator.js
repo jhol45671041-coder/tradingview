@@ -12,15 +12,39 @@ const PIP_SIZES = {
     'USDPLN': 0.0001, 'USDCNH': 0.0001,
     'USDJPY': 0.01, 'EURJPY': 0.01, 'GBPJPY': 0.01, 'AUDJPY': 0.01,
     'NZDJPY': 0.01, 'CADJPY': 0.01, 'CHFJPY': 0.01,
-    'USDTRY': 0.0001
+    'USDTRY': 0.0001,
+    // Metals
+    'XAUUSD': 0.01,   // Gold: quoted to 2 decimals
+    'XAGUSD': 0.001   // Silver: quoted to 3 decimals
 };
+
+// Contract sizes: units per 1 standard lot
+const CONTRACT_SIZES = {
+    'XAUUSD': 100,    // Gold: 100 troy ounces per lot
+    'XAGUSD': 5000    // Silver: 5,000 troy ounces per lot
+};
+const DEFAULT_CONTRACT_SIZE = 100000; // Forex standard lot
 
 function getPipSize(pair) {
     return PIP_SIZES[pair] || 0.0001;
 }
 
+function getContractSize(pair) {
+    return CONTRACT_SIZES[pair] || DEFAULT_CONTRACT_SIZE;
+}
+
+function isMetal(pair) {
+    return pair === 'XAUUSD' || pair === 'XAGUSD';
+}
+
 function isJPYPair(pair) {
     return pair.includes('JPY');
+}
+
+// Notional position value in USD
+function positionValueUSD(pair, units, price) {
+    if (pair.startsWith('USD')) return units; // USD is the base currency (USDJPY, USDCHF, ...)
+    return units * price;                     // USD is the quote currency (EURUSD, XAUUSD, ...)
 }
 
 function formatCurrency(value) {
@@ -38,11 +62,14 @@ function calculatePip() {
     const price = parseFloat(document.getElementById('pip-price').value) || 1.1000;
     
     const pipSize = getPipSize(pair);
-    const units = lots * 100000;
-    const totalValue = units * price;
+    const units = lots * getContractSize(pair);
+    const totalValue = positionValueUSD(pair, units, price);
     
     let pipValue;
-    if (isJPYPair(pair)) {
+    if (isMetal(pair)) {
+        // Metals are USD-quoted: pip value = ounces * pip size
+        pipValue = units * pipSize;
+    } else if (isJPYPair(pair)) {
         pipValue = (units * pipSize) / price;
     } else {
         // For USD quote pairs, pip value = units * pipSize
@@ -69,13 +96,7 @@ function calculateLot() {
     
     const riskAmount = balance * (riskPercent / 100);
     const pipSize = getPipSize(pair);
-    
-    let pipValuePerLot;
-    if (isJPYPair(pair)) {
-        pipValuePerLot = 100000 * pipSize; // Approximate
-    } else {
-        pipValuePerLot = 100000 * pipSize; // $10 for standard lot on USD pairs
-    }
+    const pipValuePerLot = getContractSize(pair) * pipSize; // $10/lot on USD pairs; $1/lot Gold; $5/lot Silver
     
     const lotSize = riskAmount / (stopLoss * pipValuePerLot);
     const units = lotSize * 100000;
@@ -94,8 +115,8 @@ function calculateLeverage() {
     const pair = document.getElementById('lev-pair').value;
     const price = parseFloat(document.getElementById('lev-price').value) || 1.1000;
     
-    const units = lots * 100000;
-    const positionValue = units * price;
+    const units = lots * getContractSize(pair);
+    const positionValue = positionValueUSD(pair, units, price);
     const effectiveLeverage = positionValue / equity;
     
     // Required margin at 1:100 leverage
@@ -119,8 +140,8 @@ function calculateMargin() {
     const leverage = parseInt(document.getElementById('margin-leverage').value) || 100;
     const price = parseFloat(document.getElementById('margin-price').value) || 1.1000;
     
-    const units = lots * 100000;
-    const positionValue = units * price;
+    const units = lots * getContractSize(pair);
+    const positionValue = positionValueUSD(pair, units, price);
     const requiredMargin = positionValue / leverage;
     const marginPercent = (1 / leverage) * 100;
     const marginPerPip = requiredMargin / (positionValue * getPipSize(pair));
@@ -140,7 +161,7 @@ function calculatePipsMove() {
     const lots = parseFloat(document.getElementById('move-lots').value) || 1;
     
     const pipSize = getPipSize(pair);
-    const units = lots * 100000;
+    const units = lots * getContractSize(pair);
     
     let pipsMoved;
     if (direction === 'buy') {
@@ -191,6 +212,90 @@ document.querySelectorAll('.nav-link').forEach(link => {
         document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
         link.classList.add('active');
     });
+});
+
+// === Pair change: sync sample prices & recalculate ===
+// Sample prices used to pre-fill price inputs; only overwrite when the field
+// still holds the previous pair's sample value (never clobber user input).
+const SAMPLE_PRICES = {
+    'EURUSD': 1.1000, 'GBPUSD': 1.2500, 'USDJPY': 150.000, 'USDCHF': 0.8800,
+    'AUDUSD': 0.6500, 'NZDUSD': 0.5900, 'USDCAD': 1.3700, 'EURGBP': 0.8500,
+    'EURJPY': 165.000, 'GBPJPY': 190.000,
+    'XAUUSD': 4400.00,  // Gold (per oz)
+    'XAGUSD': 64.500    // Silver (per oz)
+};
+
+const PRICE_DECIMALS = { 'USDJPY': 3, 'EURJPY': 3, 'GBPJPY': 3, 'XAUUSD': 2, 'XAGUSD': 3 };
+const DEFAULT_PRICE_DECIMALS = 4;
+
+function priceDecimals(pair) {
+    return PRICE_DECIMALS[pair] || DEFAULT_PRICE_DECIMALS;
+}
+
+function bindPairSelect(selectId, recalcFn) {
+    const select = document.getElementById(selectId);
+    if (!select) return;
+    let lastPair = select.value;
+    select.addEventListener('change', () => {
+        const oldPair = lastPair;
+        const newPair = select.value;
+        lastPair = newPair;
+        if (oldPair === newPair || !recalcFn) return;
+        recalcFn(oldPair, newPair);
+    });
+}
+
+function syncPriceField(inputId, oldPair, newPair, pipsOffset) {
+    const input = document.getElementById(inputId);
+    if (!input) return;
+    const current = parseFloat(input.value);
+    const oldSample = SAMPLE_PRICES[oldPair] + (pipsOffset ? pipsOffset * getPipSize(oldPair) : 0);
+    // Leave custom user-entered prices untouched
+    if (isNaN(current) || Math.abs(current - oldSample) > 1e-9) return;
+    const newSample = SAMPLE_PRICES[newPair] + (pipsOffset ? pipsOffset * getPipSize(newPair) : 0);
+    input.value = newSample.toFixed(priceDecimals(newPair));
+}
+
+// Sync a group of price fields together (e.g. entry + exit): only replace
+// them if ALL still hold their sample values, so a user-customized field
+// can never end up mixed with a synced one.
+function syncPriceFields(fields, oldPair, newPair) {
+    const allPristine = fields.every(f => {
+        const input = document.getElementById(f.id);
+        if (!input) return false;
+        const current = parseFloat(input.value);
+        const sample = SAMPLE_PRICES[oldPair] + (f.pipsOffset ? f.pipsOffset * getPipSize(oldPair) : 0);
+        return !isNaN(current) && Math.abs(current - sample) <= 1e-9;
+    });
+    if (!allPristine) return;
+    fields.forEach(f => syncPriceField(f.id, oldPair, newPair, f.pipsOffset));
+}
+
+// Pip Calculator
+bindPairSelect('pip-pair', (oldPair, newPair) => {
+    syncPriceField('pip-price', oldPair, newPair);
+    calculatePip();
+});
+
+// Lot Size Calculator (no price input)
+bindPairSelect('lot-pair', () => calculateLot());
+
+// Leverage Calculator
+bindPairSelect('lev-pair', (oldPair, newPair) => {
+    syncPriceField('lev-price', oldPair, newPair);
+    calculateLeverage();
+});
+
+// Margin Calculator
+bindPairSelect('margin-pair', (oldPair, newPair) => {
+    syncPriceField('margin-price', oldPair, newPair);
+    calculateMargin();
+});
+
+// Pips Move Calculator (entry + exit 50 pips higher, synced as a group)
+bindPairSelect('move-pair', (oldPair, newPair) => {
+    syncPriceFields([{ id: 'move-entry' }, { id: 'move-exit', pipsOffset: 50 }], oldPair, newPair);
+    calculatePipsMove();
 });
 
 // Run initial calculations on load
