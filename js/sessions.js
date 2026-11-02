@@ -130,7 +130,12 @@ function sessionStatus(sess, now) {
     const reopen = marketOpen ? t : nextMarketOpen(now);
     const next = inst.find(x => x.end > Math.max(t, reopen));
     if (!next) return { open: false };
-    const start = Math.max(next.start, reopen);
+    let start = Math.max(next.start, reopen);
+    if (marketOpen) {
+        // Next session falls after this week's close → it can't open before the Sunday reopen
+        const close = nextMarketClose(now);
+        if (next.start >= close) start = Math.max(next.start, nextMarketOpen(new Date(close + 1000)));
+    }
     return { open: false, until: start, start, end: next.end };
 }
 
