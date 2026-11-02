@@ -1,653 +1,864 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Forex Pro Calculator & Trading Charts</title>
-    <link rel="stylesheet" href="css/style.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Forex Pro Calculator &amp; Trading Charts</title>
+    <meta name="description" content="Forex Pro Calculator — free pip value, position size, margin, leverage, profit/loss, risk-reward, compounding, Fibonacci and pivot point calculators, live forex session clock, TradingView charts, economic calendar and a trading journal.">
+    <meta name="theme-color" content="#070b12">
+    <script>
+        // Apply saved theme before paint to avoid a flash
+        (function () {
+            try {
+                var t = localStorage.getItem('fpc-theme');
+                if (t === 'light' || t === 'dark') document.documentElement.setAttribute('data-theme', t);
+            } catch (e) {}
+        })();
+    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-    <!-- Header -->
-    <header class="header">
-        <div class="container header-inner">
-            <div class="logo">
-                <i class="fas fa-chart-line"></i>
-                <span>ForexPro<span class="accent">Calc</span></span>
-            </div>
-            <nav class="nav">
-                <a href="#calculators" class="nav-link active" data-section="calculators">
-                    <i class="fas fa-calculator"></i> Calculators
-                </a>
-                <a href="#chart" class="nav-link" data-section="chart">
-                    <i class="fas fa-chart-area"></i> Trading Chart
-                </a>
-                <a href="#pairs" class="nav-link" data-section="pairs">
-                    <i class="fas fa-coins"></i> All Pairs
-                </a>
-            </nav>
+<div class="app">
+
+    <!-- ================= Sidebar ================= -->
+    <aside class="sidebar" id="sidebar" aria-label="Main navigation">
+        <div class="brand">
+            <div class="brand-mark"><i class="fas fa-chart-line"></i></div>
+            <span>Forex Pro <span class="accent">Calculator</span></span>
         </div>
-    </header>
-
-    <!-- Hero Section -->
-    <section class="hero">
-        <div class="container">
-            <h1 class="hero-title">Forex Trading <span class="accent">Calculator</span></h1>
-            <p class="hero-subtitle">Calculate pips, lot sizes, leverage, margin and more. View live charts with TradingView integration.</p>
-        </div>
-    </section>
-
-    <!-- Calculators Section -->
-    <section id="calculators" class="section">
-        <div class="container">
-            <h2 class="section-title"><i class="fas fa-calculator"></i> Forex Calculators</h2>
-            
-            <div class="calc-tabs">
-                <button class="calc-tab active" data-calc="pip"><i class="fas fa-exchange-alt"></i> Pip Calculator</button>
-                <button class="calc-tab" data-calc="lot"><i class="fas fa-layer-group"></i> Lot Size</button>
-                <button class="calc-tab" data-calc="leverage"><i class="fas fa-balance-scale"></i> Leverage</button>
-                <button class="calc-tab" data-calc="margin"><i class="fas fa-shield-alt"></i> Margin</button>
-                <button class="calc-tab" data-calc="pipsmove"><i class="fas fa-chart-line"></i> Pips Move</button>
+        <nav class="nav">
+            <div class="nav-group">
+                <div class="nav-group-title">Overview</div>
+                <a href="#dashboard" class="nav-link" data-view="dashboard"><i class="fas fa-gauge-high"></i> Dashboard</a>
+                <a href="#sessions" class="nav-link" data-view="sessions"><i class="fas fa-clock"></i> Market Sessions <span class="nav-badge" id="nav-open-count">–</span></a>
             </div>
+            <div class="nav-group">
+                <div class="nav-group-title">Tools</div>
+                <a href="#calculators" class="nav-link" data-view="calculators"><i class="fas fa-calculator"></i> Calculators</a>
+                <a href="#analysis" class="nav-link" data-view="analysis"><i class="fas fa-ruler-combined"></i> Fibonacci &amp; Pivots</a>
+                <a href="#journal" class="nav-link" data-view="journal"><i class="fas fa-book"></i> Trading Journal</a>
+            </div>
+            <div class="nav-group">
+                <div class="nav-group-title">Markets</div>
+                <a href="#charts" class="nav-link" data-view="charts"><i class="fas fa-chart-area"></i> Live Chart</a>
+                <a href="#markets" class="nav-link" data-view="markets"><i class="fas fa-table-cells"></i> Heatmap &amp; Rates</a>
+                <a href="#calendar" class="nav-link" data-view="calendar"><i class="fas fa-calendar-days"></i> Economic Calendar</a>
+                <a href="#pairs" class="nav-link" data-view="pairs"><i class="fas fa-coins"></i> All Pairs</a>
+            </div>
+            <div class="nav-group">
+                <div class="nav-group-title">Help</div>
+                <a href="#guide" class="nav-link" data-view="guide"><i class="fas fa-circle-question"></i> How to Use</a>
+            </div>
+        </nav>
+        <div class="sidebar-foot">For educational purposes only — not financial advice.</div>
+    </aside>
+    <div class="scrim" id="scrim"></div>
 
-            <!-- Pip Calculator -->
-            <div class="calc-panel active" id="calc-pip">
-                <div class="calc-grid">
-                    <div class="calc-form">
-                        <h3>Pip Value Calculator</h3>
-                        <p class="calc-desc">Calculate the value of a pip based on your trade size and currency pair.</p>
-                        
-                        <div class="form-group">
-                            <label>Currency Pair</label>
-                            <select id="pip-pair">
-                                <option value="EURUSD">EUR/USD</option>
-                                <option value="GBPUSD">GBP/USD</option>
-                                <option value="USDJPY">USD/JPY</option>
-                                <option value="USDCHF">USD/CHF</option>
-                                <option value="AUDUSD">AUD/USD</option>
-                                <option value="NZDUSD">NZD/USD</option>
-                                <option value="USDCAD">USD/CAD</option>
-                                <option value="EURGBP">EUR/GBP</option>
-                                <option value="EURJPY">EUR/JPY</option>
-                                <option value="GBPJPY">GBP/JPY</option>
-                                <optgroup label="Metals">
-                                    <option value="XAUUSD">XAU/USD (Gold)</option>
-                                    <option value="XAGUSD">XAG/USD (Silver)</option>
-                                </optgroup>
-                            </select>
-                        </div>
+    <!-- ================= Main ================= -->
+    <div class="main">
+        <header class="topbar">
+            <button class="icon-btn" id="menu-btn" aria-label="Open menu"><i class="fas fa-bars"></i></button>
+            <div class="page-title" id="page-title">Dashboard<small>Forex Pro Calculator</small></div>
+            <div class="topbar-right">
+                <div class="clock-chip" title="Pakistan Standard Time">
+                    <span class="market-dot" id="top-market-dot"></span>
+                    <span>PKT <b id="top-clock">--:--:--</b></span>
+                </div>
+                <button class="icon-btn" id="theme-btn" aria-label="Toggle light/dark theme" title="Toggle theme"><i class="fas fa-sun"></i></button>
+            </div>
+        </header>
 
-                        <div class="form-group">
-                            <label>Account Currency</label>
-                            <select id="pip-account-currency">
-                                <option value="USD">USD</option>
-                                <option value="EUR">EUR</option>
-                                <option value="GBP">GBP</option>
-                                <option value="JPY">JPY</option>
-                            </select>
-                        </div>
+        <!-- TradingView ticker tape -->
+        <div class="ticker-wrap" id="ticker-tape"></div>
 
-                        <div class="form-group">
-                            <label>Trade Size (Lots)</label>
-                            <input type="number" id="pip-lots" value="1" step="0.01" min="0.01">
-                        </div>
+        <main class="content">
 
-                        <div class="form-group">
-                            <label>Current Price</label>
-                            <input type="number" id="pip-price" value="1.1000" step="0.0001">
-                        </div>
-
-                        <button class="btn-calculate" onclick="calculatePip()">
-                            <i class="fas fa-calculator"></i> Calculate Pip Value
-                        </button>
-                    </div>
-                    <div class="calc-result">
-                        <h3>Results</h3>
-                        <div class="result-card">
-                            <div class="result-item">
-                                <span class="result-label">Pip Value</span>
-                                <span class="result-value" id="pip-value-result">$10.00</span>
-                            </div>
-                            <div class="result-item">
-                                <span class="result-label">Pip Size</span>
-                                <span class="result-value" id="pip-size-result">0.0001</span>
-                            </div>
-                            <div class="result-item">
-                                <span class="result-label">Units Traded</span>
-                                <span class="result-value" id="pip-units-result">100,000</span>
-                            </div>
-                            <div class="result-item">
-                                <span class="result-label">Total Trade Value</span>
-                                <span class="result-value" id="pip-total-result">$110,000.00</span>
-                            </div>
-                        </div>
-                        <div class="result-info">
-                            <i class="fas fa-info-circle"></i>
-                            <span>A standard lot equals 100,000 units. For JPY pairs, pip size is 0.01. Metals: 1 lot Gold = 100 oz, 1 lot Silver = 5,000 oz.</span>
-                        </div>
+            <!-- ============ DASHBOARD ============ -->
+            <section class="view" id="view-dashboard" data-title="Dashboard">
+                <div class="hero-card">
+                    <h1>Forex Pro <span class="accent">Calculator</span></h1>
+                    <p>Size positions, manage risk, map Fibonacci and pivot levels, track the sessions and log your trades — all in one fast, free trading toolkit that runs right in your browser.</p>
+                    <div class="kpis">
+                        <div class="kpi"><div class="k">PKT time</div><div class="v" id="kpi-pkt">--:--</div></div>
+                        <div class="kpi"><div class="k">Forex market</div><div class="v" id="kpi-market">–</div></div>
+                        <div class="kpi"><div class="k">Open sessions</div><div class="v" id="kpi-sessions">–</div></div>
+                        <div class="kpi"><div class="k">Journal win rate</div><div class="v" id="kpi-winrate">–</div></div>
                     </div>
                 </div>
-            </div>
 
-            <!-- Lot Size Calculator -->
-            <div class="calc-panel" id="calc-lot">
-                <div class="calc-grid">
-                    <div class="calc-form">
-                        <h3>Lot Size Calculator</h3>
-                        <p class="calc-desc">Determine the optimal lot size based on your risk tolerance and stop loss.</p>
-                        
-                        <div class="form-group">
-                            <label>Account Balance ($)</label>
-                            <input type="number" id="lot-balance" value="10000" step="100">
-                        </div>
-
-                        <div class="form-group">
-                            <label>Risk Percentage (%)</label>
-                            <input type="number" id="lot-risk" value="2" step="0.1" min="0.1" max="100">
-                        </div>
-
-                        <div class="form-group">
-                            <label>Stop Loss (Pips)</label>
-                            <input type="number" id="lot-stoploss" value="50" step="1" min="1">
-                        </div>
-
-                        <div class="form-group">
-                            <label>Currency Pair</label>
-                            <select id="lot-pair">
-                                <option value="EURUSD">EUR/USD</option>
-                                <option value="GBPUSD">GBP/USD</option>
-                                <option value="USDJPY">USD/JPY</option>
-                                <option value="USDCHF">USD/CHF</option>
-                                <option value="AUDUSD">AUD/USD</option>
-                                <option value="NZDUSD">NZD/USD</option>
-                                <option value="USDCAD">USD/CAD</option>
-                                <optgroup label="Metals">
-                                    <option value="XAUUSD">XAU/USD (Gold)</option>
-                                    <option value="XAGUSD">XAG/USD (Silver)</option>
-                                </optgroup>
-                            </select>
-                        </div>
-
-                        <button class="btn-calculate" onclick="calculateLot()">
-                            <i class="fas fa-calculator"></i> Calculate Lot Size
-                        </button>
-                    </div>
-                    <div class="calc-result">
-                        <h3>Results</h3>
-                        <div class="result-card">
-                            <div class="result-item">
-                                <span class="result-label">Recommended Lot Size</span>
-                                <span class="result-value" id="lot-size-result">0.40</span>
-                            </div>
-                            <div class="result-item">
-                                <span class="result-label">Risk Amount</span>
-                                <span class="result-value" id="lot-risk-amount">$200.00</span>
-                            </div>
-                            <div class="result-item">
-                                <span class="result-label">Pip Value</span>
-                                <span class="result-value" id="lot-pip-value">$4.00</span>
-                            </div>
-                            <div class="result-item">
-                                <span class="result-label">Units</span>
-                                <span class="result-value" id="lot-units">40,000</span>
-                            </div>
-                        </div>
-                        <div class="result-info">
-                            <i class="fas fa-info-circle"></i>
-                            <span>Never risk more than 2% of your account on a single trade for proper risk management.</span>
-                        </div>
+                <div class="card">
+                    <div class="card-head"><div class="card-icon"><i class="fas fa-bolt"></i></div><h2>Quick tools</h2></div>
+                    <div class="tool-grid">
+                        <a class="tool" href="#calculators/lot"><i class="fas fa-layer-group"></i><b>Position Size</b><span>Lots from risk % or fixed $</span></a>
+                        <a class="tool" href="#calculators/pip"><i class="fas fa-exchange-alt"></i><b>Pip Value</b><span>What one pip is worth</span></a>
+                        <a class="tool" href="#calculators/rr"><i class="fas fa-scale-unbalanced"></i><b>Risk : Reward</b><span>SL / TP and break-even win rate</span></a>
+                        <a class="tool" href="#calculators/margin"><i class="fas fa-shield-alt"></i><b>Margin</b><span>Margin your broker locks</span></a>
+                        <a class="tool" href="#calculators/compound"><i class="fas fa-seedling"></i><b>Compounding</b><span>Grow an account over time</span></a>
+                        <a class="tool" href="#analysis/fib"><i class="fas fa-wave-square"></i><b>Fibonacci</b><span>Retracements &amp; extensions</span></a>
+                        <a class="tool" href="#analysis/pivot"><i class="fas fa-bars-staggered"></i><b>Pivot Points</b><span>Classic, Fib, Camarilla, Woodie</span></a>
+                        <a class="tool" href="#journal"><i class="fas fa-book"></i><b>Journal</b><span>Log trades, see your stats</span></a>
                     </div>
                 </div>
-            </div>
 
-            <!-- Leverage Calculator -->
-            <div class="calc-panel" id="calc-leverage">
-                <div class="calc-grid">
-                    <div class="calc-form">
-                        <h3>Leverage Calculator</h3>
-                        <p class="calc-desc">Calculate the leverage ratio and effective buying power of your account.</p>
-                        
-                        <div class="form-group">
-                            <label>Account Equity ($)</label>
-                            <input type="number" id="lev-equity" value="10000" step="100">
+                <div class="grid dash-grid" style="margin-top:14px">
+                    <div class="card" style="margin:0">
+                        <div class="card-head">
+                            <div class="card-icon"><i class="fas fa-earth-asia"></i></div>
+                            <h2>Market overview</h2><span class="sub">TradingView</span>
                         </div>
-
-                        <div class="form-group">
-                            <label>Position Size (Lots)</label>
-                            <input type="number" id="lev-lots" value="1" step="0.01" min="0.01">
-                        </div>
-
-                        <div class="form-group">
-                            <label>Currency Pair</label>
-                            <select id="lev-pair">
-                                <option value="EURUSD">EUR/USD</option>
-                                <option value="GBPUSD">GBP/USD</option>
-                                <option value="USDJPY">USD/JPY</option>
-                                <option value="USDCHF">USD/CHF</option>
-                                <option value="AUDUSD">AUD/USD</option>
-                                <optgroup label="Metals">
-                                    <option value="XAUUSD">XAU/USD (Gold)</option>
-                                    <option value="XAGUSD">XAG/USD (Silver)</option>
-                                </optgroup>
-                            </select>
-                        </div>
-
-                        <div class="form-group">
-                            <label>Current Price</label>
-                            <input type="number" id="lev-price" value="1.1000" step="0.0001">
-                        </div>
-
-                        <button class="btn-calculate" onclick="calculateLeverage()">
-                            <i class="fas fa-calculator"></i> Calculate Leverage
-                        </button>
+                        <div class="widget-box h-500" id="market-overview-widget"><div class="widget-loading">Loading market overview…</div></div>
                     </div>
-                    <div class="calc-result">
-                        <h3>Results</h3>
-                        <div class="result-card">
-                            <div class="result-item">
-                                <span class="result-label">Effective Leverage</span>
-                                <span class="result-value" id="lev-ratio">1:11.00</span>
-                            </div>
-                            <div class="result-item">
-                                <span class="result-label">Total Position Value</span>
-                                <span class="result-value" id="lev-position-value">$110,000.00</span>
-                            </div>
-                            <div class="result-item">
-                                <span class="result-label">Required Margin (1:100)</span>
-                                <span class="result-value" id="lev-margin-required">$1,100.00</span>
-                            </div>
-                            <div class="result-item">
-                                <span class="result-label">Free Margin</span>
-                                <span class="result-value" id="lev-free-margin">$8,900.00</span>
-                            </div>
+                    <div class="card" style="margin:0">
+                        <div class="card-head">
+                            <div class="card-icon"><i class="fas fa-clock"></i></div>
+                            <h2>Sessions now</h2>
+                            <span class="spacer"></span>
+                            <a href="#sessions" class="btn btn-ghost btn-sm">Full clock</a>
                         </div>
-                        <div class="leverage-meter">
-                            <div class="meter-label">
-                                <span>Low Risk</span>
-                                <span>High Risk</span>
-                            </div>
-                            <div class="meter-bar">
-                                <div class="meter-fill" id="leverage-meter-fill" style="width: 11%"></div>
-                            </div>
-                        </div>
+                        <div class="session-list" id="dash-sessions" style="grid-template-columns:1fr"></div>
                     </div>
                 </div>
-            </div>
+            </section>
 
-            <!-- Margin Calculator -->
-            <div class="calc-panel" id="calc-margin">
-                <div class="calc-grid">
-                    <div class="calc-form">
-                        <h3>Margin Calculator</h3>
-                        <p class="calc-desc">Calculate the required margin for your trades based on leverage and position size.</p>
-                        
-                        <div class="form-group">
-                            <label>Currency Pair</label>
-                            <select id="margin-pair">
-                                <option value="EURUSD">EUR/USD</option>
-                                <option value="GBPUSD">GBP/USD</option>
-                                <option value="USDJPY">USD/JPY</option>
-                                <option value="USDCHF">USD/CHF</option>
-                                <option value="AUDUSD">AUD/USD</option>
-                                <option value="NZDUSD">NZD/USD</option>
-                                <option value="USDCAD">USD/CAD</option>
-                                <optgroup label="Metals">
-                                    <option value="XAUUSD">XAU/USD (Gold)</option>
-                                    <option value="XAGUSD">XAG/USD (Silver)</option>
-                                </optgroup>
-                            </select>
-                        </div>
-
-                        <div class="form-group">
-                            <label>Trade Size (Lots)</label>
-                            <input type="number" id="margin-lots" value="1" step="0.01" min="0.01">
-                        </div>
-
-                        <div class="form-group">
-                            <label>Leverage</label>
-                            <select id="margin-leverage">
-                                <option value="1">1:1</option>
-                                <option value="10">1:10</option>
-                                <option value="20">1:20</option>
-                                <option value="50">1:50</option>
-                                <option value="100" selected>1:100</option>
-                                <option value="200">1:200</option>
-                                <option value="500">1:500</option>
-                                <option value="1000">1:1000</option>
-                            </select>
-                        </div>
-
-                        <div class="form-group">
-                            <label>Current Price</label>
-                            <input type="number" id="margin-price" value="1.1000" step="0.0001">
-                        </div>
-
-                        <button class="btn-calculate" onclick="calculateMargin()">
-                            <i class="fas fa-calculator"></i> Calculate Margin
-                        </button>
-                    </div>
-                    <div class="calc-result">
-                        <h3>Results</h3>
-                        <div class="result-card">
-                            <div class="result-item">
-                                <span class="result-label">Required Margin</span>
-                                <span class="result-value" id="margin-required">$1,100.00</span>
-                            </div>
-                            <div class="result-item">
-                                <span class="result-label">Position Value</span>
-                                <span class="result-value" id="margin-position">$110,000.00</span>
-                            </div>
-                            <div class="result-item">
-                                <span class="result-label">Margin Percentage</span>
-                                <span class="result-value" id="margin-percent">1.00%</span>
-                            </div>
-                            <div class="result-item">
-                                <span class="result-label">Margin per Pip</span>
-                                <span class="result-value" id="margin-per-pip">$0.10</span>
-                            </div>
-                        </div>
-                        <div class="margin-breakdown">
-                            <h4>Lot Size Reference</h4>
-                            <table class="ref-table">
-                                <tr><td>Standard Lot</td><td>100,000 units</td></tr>
-                                <tr><td>Mini Lot</td><td>10,000 units</td></tr>
-                                <tr><td>Micro Lot</td><td>1,000 units</td></tr>
-                                <tr><td>Nano Lot</td><td>100 units</td></tr>
-                            </table>
-                        </div>
-                    </div>
+            <!-- ============ CALCULATORS ============ -->
+            <section class="view" id="view-calculators" data-title="Calculators">
+                <div class="view-head">
+                    <h1>Trading calculators</h1>
+                    <p>Results update as you type. Values are shown in USD unless stated.</p>
                 </div>
-            </div>
 
-            <!-- Pips Move Calculator -->
-            <div class="calc-panel" id="calc-pipsmove">
-                <div class="calc-grid">
-                    <div class="calc-form">
-                        <h3>Pips Move Calculator</h3>
-                        <p class="calc-desc">Calculate profit/loss based on pips movement in the market.</p>
-                        
-                        <div class="form-group">
-                            <label>Currency Pair</label>
-                            <select id="move-pair">
-                                <option value="EURUSD">EUR/USD</option>
-                                <option value="GBPUSD">GBP/USD</option>
-                                <option value="USDJPY">USD/JPY</option>
-                                <option value="USDCHF">USD/CHF</option>
-                                <option value="AUDUSD">AUD/USD</option>
-                                <option value="NZDUSD">NZD/USD</option>
-                                <option value="USDCAD">USD/CAD</option>
-                                <optgroup label="Metals">
-                                    <option value="XAUUSD">XAU/USD (Gold)</option>
-                                    <option value="XAGUSD">XAG/USD (Silver)</option>
-                                </optgroup>
-                            </select>
-                        </div>
+                <div class="calc-tabs" data-group="calc" role="tablist">
+                    <button class="calc-tab active" data-calc="pip"><i class="fas fa-exchange-alt"></i> Pip Value</button>
+                    <button class="calc-tab" data-calc="lot"><i class="fas fa-layer-group"></i> Position Size</button>
+                    <button class="calc-tab" data-calc="pipsmove"><i class="fas fa-chart-line"></i> Profit / Loss</button>
+                    <button class="calc-tab" data-calc="rr"><i class="fas fa-scale-unbalanced"></i> Risk : Reward</button>
+                    <button class="calc-tab" data-calc="margin"><i class="fas fa-shield-alt"></i> Margin</button>
+                    <button class="calc-tab" data-calc="leverage"><i class="fas fa-balance-scale"></i> Leverage</button>
+                    <button class="calc-tab" data-calc="compound"><i class="fas fa-seedling"></i> Compounding</button>
+                    <button class="calc-tab" data-calc="drawdown"><i class="fas fa-arrow-trend-down"></i> Drawdown</button>
+                    <button class="calc-tab" data-calc="converter"><i class="fas fa-money-bill-transfer"></i> Converter</button>
+                </div>
 
-                        <div class="form-group">
-                            <label>Trade Direction</label>
-                            <select id="move-direction">
-                                <option value="buy">Buy (Long)</option>
-                                <option value="sell">Sell (Short)</option>
-                            </select>
-                        </div>
-
-                        <div class="form-group">
-                            <label>Entry Price</label>
-                            <input type="number" id="move-entry" value="1.1000" step="0.0001">
-                        </div>
-
-                        <div class="form-group">
-                            <label>Exit Price</label>
-                            <input type="number" id="move-exit" value="1.1050" step="0.0001">
-                        </div>
-
-                        <div class="form-group">
-                            <label>Trade Size (Lots)</label>
-                            <input type="number" id="move-lots" value="1" step="0.01" min="0.01">
-                        </div>
-
-                        <button class="btn-calculate" onclick="calculatePipsMove()">
-                            <i class="fas fa-calculator"></i> Calculate Pips Move
-                        </button>
-                    </div>
-                    <div class="calc-result">
-                        <h3>Results</h3>
-                        <div class="result-card">
-                            <div class="result-item">
-                                <span class="result-label">Pips Moved</span>
-                                <span class="result-value" id="move-pips">50.0</span>
+                <!-- Pip Calculator -->
+                <div class="calc-panel active" id="calc-pip" data-group="calc">
+                    <div class="calc-grid">
+                        <div class="card calc-form" data-calc-fn="calculatePip">
+                            <h3>Pip Value Calculator</h3>
+                            <p class="calc-desc">The value of one pip for your trade size and pair, converted to your account currency.</p>
+                            <div class="form-group">
+                                <label for="pip-pair">Currency pair</label>
+                                <select id="pip-pair" class="pair-select" data-include="all"></select>
                             </div>
-                            <div class="result-item">
-                                <span class="result-label">Profit / Loss</span>
-                                <span class="result-value profit" id="move-pl">$500.00</span>
+                            <div class="form-group">
+                                <label for="pip-account-currency">Account currency</label>
+                                <select id="pip-account-currency">
+                                    <option value="USD">USD</option>
+                                    <option value="EUR">EUR</option>
+                                    <option value="GBP">GBP</option>
+                                    <option value="JPY">JPY</option>
+                                    <option value="AUD">AUD</option>
+                                    <option value="CAD">CAD</option>
+                                    <option value="CHF">CHF</option>
+                                </select>
                             </div>
-                            <div class="result-item">
-                                <span class="result-label">Pip Value</span>
-                                <span class="result-value" id="move-pip-val">$10.00</span>
-                            </div>
-                            <div class="result-item">
-                                <span class="result-label">Price Change %</span>
-                                <span class="result-value" id="move-change">0.45%</span>
-                            </div>
-                        </div>
-                        <div class="pips-scenarios">
-                            <h4>Quick Scenarios (1 Standard Lot)</h4>
-                            <div class="scenario-grid">
-                                <div class="scenario">
-                                    <span>10 Pips</span>
-                                    <span class="profit">$100</span>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="pip-lots">Trade size (lots)</label>
+                                    <input type="number" id="pip-lots" value="1" step="0.01" min="0.01" inputmode="decimal">
                                 </div>
-                                <div class="scenario">
-                                    <span>25 Pips</span>
-                                    <span class="profit">$250</span>
+                                <div class="form-group">
+                                    <label for="pip-price">Current price</label>
+                                    <input type="number" id="pip-price" value="1.1000" step="any" inputmode="decimal">
                                 </div>
-                                <div class="scenario">
-                                    <span>50 Pips</span>
-                                    <span class="profit">$500</span>
+                            </div>
+                            <button class="btn-calculate" onclick="calculatePip()"><i class="fas fa-calculator"></i> Calculate pip value</button>
+                        </div>
+                        <div class="calc-result">
+                            <h3>Results</h3>
+                            <div class="result-hero"><div class="label">Pip value</div><div class="big" id="pip-value-result">$10.00</div></div>
+                            <div class="result-card">
+                                <div class="result-item"><span class="result-label">Pip size</span><span class="result-value" id="pip-size-result">0.0001</span></div>
+                                <div class="result-item"><span class="result-label">Units traded</span><span class="result-value" id="pip-units-result">100,000</span></div>
+                                <div class="result-item"><span class="result-label">Total trade value (USD)</span><span class="result-value" id="pip-total-result">$110,000.00</span></div>
+                            </div>
+                            <div class="result-info"><i class="fas fa-info-circle"></i><span>A standard lot equals 100,000 units. For JPY pairs, pip size is 0.01. Metals: 1 lot Gold = 100 oz, 1 lot Silver = 5,000 oz.</span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Lot / Position Size Calculator -->
+                <div class="calc-panel" id="calc-lot" data-group="calc">
+                    <div class="calc-grid">
+                        <div class="card calc-form" data-calc-fn="calculateLot">
+                            <h3>Position Size Calculator</h3>
+                            <p class="calc-desc">The right lot size for your risk and stop loss.</p>
+                            <div class="form-group">
+                                <label>Risk mode</label>
+                                <div class="seg" id="lot-risk-mode-seg">
+                                    <button type="button" class="active" data-value="percent">Risk %</button>
+                                    <button type="button" data-value="fixed">Fixed $ amount</button>
                                 </div>
-                                <div class="scenario">
-                                    <span>100 Pips</span>
-                                    <span class="profit">$1,000</span>
+                                <input type="hidden" id="lot-risk-mode" value="percent">
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="lot-balance">Account balance ($)</label>
+                                    <input type="number" id="lot-balance" value="10000" step="100" inputmode="decimal">
+                                </div>
+                                <div class="form-group" id="lot-risk-percent-group">
+                                    <label for="lot-risk">Risk (%)</label>
+                                    <input type="number" id="lot-risk" value="2" step="0.1" min="0.1" max="100" inputmode="decimal">
+                                </div>
+                                <div class="form-group hidden" id="lot-risk-fixed-group">
+                                    <label for="lot-risk-fixed">Risk amount ($)</label>
+                                    <input type="number" id="lot-risk-fixed" value="100" step="10" min="1" inputmode="decimal">
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="lot-stoploss">Stop loss (pips)</label>
+                                    <input type="number" id="lot-stoploss" value="50" step="1" min="1" inputmode="decimal">
+                                </div>
+                                <div class="form-group">
+                                    <label for="lot-pair">Currency pair</label>
+                                    <select id="lot-pair" class="pair-select" data-include="all"></select>
+                                </div>
+                            </div>
+                            <button class="btn-calculate" onclick="calculateLot()"><i class="fas fa-calculator"></i> Calculate lot size</button>
+                        </div>
+                        <div class="calc-result">
+                            <h3>Results</h3>
+                            <div class="result-hero"><div class="label">Recommended lot size</div><div class="big" id="lot-size-result">0.40</div></div>
+                            <div class="result-card">
+                                <div class="result-item"><span class="result-label">Risk amount</span><span class="result-value" id="lot-risk-amount">$200.00</span></div>
+                                <div class="result-item"><span class="result-label">Risk % of balance</span><span class="result-value" id="lot-risk-pct">2.00%</span></div>
+                                <div class="result-item"><span class="result-label">Pip value at this size</span><span class="result-value" id="lot-pip-value">$4.00</span></div>
+                                <div class="result-item"><span class="result-label">Units</span><span class="result-value" id="lot-units">40,000</span></div>
+                                <div class="result-item"><span class="result-label">Mini / micro lots</span><span class="result-value" id="lot-mini-micro">4.0 / 40</span></div>
+                            </div>
+                            <div class="result-info" id="lot-info"><i class="fas fa-info-circle"></i><span>Never risk more than 1–2% of your account on a single trade.</span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pips Move / Profit-Loss -->
+                <div class="calc-panel" id="calc-pipsmove" data-group="calc">
+                    <div class="calc-grid">
+                        <div class="card calc-form" data-calc-fn="calculatePipsMove">
+                            <h3>Profit / Loss Calculator</h3>
+                            <p class="calc-desc">Profit or loss in pips and dollars between an entry and exit price.</p>
+                            <div class="form-group">
+                                <label for="move-pair">Currency pair</label>
+                                <select id="move-pair" class="pair-select" data-include="all"></select>
+                            </div>
+                            <div class="form-group">
+                                <label>Trade direction</label>
+                                <div class="seg" data-target="move-direction">
+                                    <button type="button" class="active buy" data-value="buy">Buy (long)</button>
+                                    <button type="button" class="sell" data-value="sell">Sell (short)</button>
+                                </div>
+                                <select id="move-direction" class="hidden"><option value="buy">Buy (Long)</option><option value="sell">Sell (Short)</option></select>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="move-entry">Entry price</label>
+                                    <input type="number" id="move-entry" value="1.1000" step="any" inputmode="decimal">
+                                </div>
+                                <div class="form-group">
+                                    <label for="move-exit">Exit price</label>
+                                    <input type="number" id="move-exit" value="1.1050" step="any" inputmode="decimal">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="move-lots">Trade size (lots)</label>
+                                <input type="number" id="move-lots" value="1" step="0.01" min="0.01" inputmode="decimal">
+                            </div>
+                            <button class="btn-calculate" onclick="calculatePipsMove()"><i class="fas fa-calculator"></i> Calculate profit / loss</button>
+                        </div>
+                        <div class="calc-result">
+                            <h3>Results</h3>
+                            <div class="result-hero"><div class="label">Profit / loss</div><div class="big result-value profit" id="move-pl">$500.00</div></div>
+                            <div class="result-card">
+                                <div class="result-item"><span class="result-label">Pips moved</span><span class="result-value" id="move-pips">50.0</span></div>
+                                <div class="result-item"><span class="result-label">Pip value</span><span class="result-value" id="move-pip-val">$10.00</span></div>
+                                <div class="result-item"><span class="result-label">Price change</span><span class="result-value" id="move-change">0.45%</span></div>
+                            </div>
+                            <div class="pips-scenarios">
+                                <h4 id="scenario-title">Quick scenarios (this trade size)</h4>
+                                <div class="scenario-grid" id="scenario-grid">
+                                    <div class="scenario"><span>10 pips</span><span class="profit">$100</span></div>
+                                    <div class="scenario"><span>25 pips</span><span class="profit">$250</span></div>
+                                    <div class="scenario"><span>50 pips</span><span class="profit">$500</span></div>
+                                    <div class="scenario"><span>100 pips</span><span class="profit">$1,000</span></div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
+
+                <!-- Risk : Reward -->
+                <div class="calc-panel" id="calc-rr" data-group="calc">
+                    <div class="calc-grid">
+                        <div class="card calc-form" data-calc-fn="calculateRR">
+                            <h3>Risk : Reward Calculator</h3>
+                            <p class="calc-desc">Enter your entry, stop loss and take profit to see the risk, the reward and the win rate you need to break even.</p>
+                            <div class="form-group">
+                                <label for="rr-pair">Currency pair</label>
+                                <select id="rr-pair" class="pair-select" data-include="all"></select>
+                            </div>
+                            <div class="form-group">
+                                <label>Direction</label>
+                                <div class="seg" data-target="rr-direction">
+                                    <button type="button" class="active buy" data-value="buy">Buy (long)</button>
+                                    <button type="button" class="sell" data-value="sell">Sell (short)</button>
+                                </div>
+                                <select id="rr-direction" class="hidden"><option value="buy">Buy</option><option value="sell">Sell</option></select>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group"><label for="rr-entry">Entry price</label><input type="number" id="rr-entry" value="1.1000" step="any" inputmode="decimal"></div>
+                                <div class="form-group"><label for="rr-lots">Lots</label><input type="number" id="rr-lots" value="1" step="0.01" min="0.01" inputmode="decimal"></div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group"><label for="rr-sl">Stop loss price</label><input type="number" id="rr-sl" value="1.0970" step="any" inputmode="decimal"></div>
+                                <div class="form-group"><label for="rr-tp">Take profit price</label><input type="number" id="rr-tp" value="1.1090" step="any" inputmode="decimal"></div>
+                            </div>
+                            <button class="btn-calculate" onclick="calculateRR()"><i class="fas fa-calculator"></i> Calculate risk : reward</button>
+                        </div>
+                        <div class="calc-result">
+                            <h3>Results</h3>
+                            <div class="result-hero"><div class="label">Risk : reward</div><div class="big" id="rr-ratio">1 : 3.00</div>
+                                <div class="rr-visual"><div class="risk" id="rr-bar-risk" style="width:25%"></div><div class="reward" id="rr-bar-reward" style="width:75%"></div></div>
+                            </div>
+                            <div class="result-card">
+                                <div class="result-item"><span class="result-label">Risk (pips)</span><span class="result-value loss" id="rr-risk-pips">30.0</span></div>
+                                <div class="result-item"><span class="result-label">Reward (pips)</span><span class="result-value profit" id="rr-reward-pips">90.0</span></div>
+                                <div class="result-item"><span class="result-label">Money at risk</span><span class="result-value loss" id="rr-risk-usd">$300.00</span></div>
+                                <div class="result-item"><span class="result-label">Potential profit</span><span class="result-value profit" id="rr-reward-usd">$900.00</span></div>
+                                <div class="result-item"><span class="result-label">Break-even win rate</span><span class="result-value" id="rr-breakeven">25.0%</span></div>
+                            </div>
+                            <div class="result-info" id="rr-info"><i class="fas fa-info-circle"></i><span>Many traders look for at least 1:2.</span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Margin -->
+                <div class="calc-panel" id="calc-margin" data-group="calc">
+                    <div class="calc-grid">
+                        <div class="card calc-form" data-calc-fn="calculateMargin">
+                            <h3>Margin Calculator</h3>
+                            <p class="calc-desc">The margin required to open a position at your leverage.</p>
+                            <div class="form-group">
+                                <label for="margin-pair">Currency pair</label>
+                                <select id="margin-pair" class="pair-select" data-include="all"></select>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group"><label for="margin-lots">Trade size (lots)</label><input type="number" id="margin-lots" value="1" step="0.01" min="0.01" inputmode="decimal"></div>
+                                <div class="form-group">
+                                    <label for="margin-leverage">Leverage</label>
+                                    <select id="margin-leverage">
+                                        <option value="1">1:1</option><option value="10">1:10</option><option value="20">1:20</option>
+                                        <option value="30">1:30</option><option value="50">1:50</option><option value="100" selected>1:100</option>
+                                        <option value="200">1:200</option><option value="400">1:400</option><option value="500">1:500</option>
+                                        <option value="1000">1:1000</option><option value="2000">1:2000</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-group"><label for="margin-price">Current price</label><input type="number" id="margin-price" value="1.1000" step="any" inputmode="decimal"></div>
+                            <button class="btn-calculate" onclick="calculateMargin()"><i class="fas fa-calculator"></i> Calculate margin</button>
+                        </div>
+                        <div class="calc-result">
+                            <h3>Results</h3>
+                            <div class="result-hero"><div class="label">Required margin</div><div class="big" id="margin-required">$1,100.00</div></div>
+                            <div class="result-card">
+                                <div class="result-item"><span class="result-label">Position value</span><span class="result-value" id="margin-position">$110,000.00</span></div>
+                                <div class="result-item"><span class="result-label">Margin percentage</span><span class="result-value" id="margin-percent">1.00%</span></div>
+                                <div class="result-item"><span class="result-label">Margin per pip</span><span class="result-value" id="margin-per-pip">$0.10</span></div>
+                            </div>
+                            <div class="margin-breakdown">
+                                <h4>Lot size reference</h4>
+                                <table class="ref-table">
+                                    <tr><td>Standard lot</td><td>100,000 units</td></tr>
+                                    <tr><td>Mini lot</td><td>10,000 units</td></tr>
+                                    <tr><td>Micro lot</td><td>1,000 units</td></tr>
+                                    <tr><td>Nano lot</td><td>100 units</td></tr>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Leverage -->
+                <div class="calc-panel" id="calc-leverage" data-group="calc">
+                    <div class="calc-grid">
+                        <div class="card calc-form" data-calc-fn="calculateLeverage">
+                            <h3>Leverage Calculator</h3>
+                            <p class="calc-desc">Your effective leverage and buying power for a position.</p>
+                            <div class="form-row">
+                                <div class="form-group"><label for="lev-equity">Account equity ($)</label><input type="number" id="lev-equity" value="10000" step="100" inputmode="decimal"></div>
+                                <div class="form-group"><label for="lev-lots">Position size (lots)</label><input type="number" id="lev-lots" value="1" step="0.01" min="0.01" inputmode="decimal"></div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group"><label for="lev-pair">Currency pair</label><select id="lev-pair" class="pair-select" data-include="all"></select></div>
+                                <div class="form-group"><label for="lev-price">Current price</label><input type="number" id="lev-price" value="1.1000" step="any" inputmode="decimal"></div>
+                            </div>
+                            <button class="btn-calculate" onclick="calculateLeverage()"><i class="fas fa-calculator"></i> Calculate leverage</button>
+                        </div>
+                        <div class="calc-result">
+                            <h3>Results</h3>
+                            <div class="result-hero"><div class="label">Effective leverage</div><div class="big" id="lev-ratio">1:11.00</div></div>
+                            <div class="result-card">
+                                <div class="result-item"><span class="result-label">Total position value</span><span class="result-value" id="lev-position-value">$110,000.00</span></div>
+                                <div class="result-item"><span class="result-label">Required margin (1:100)</span><span class="result-value" id="lev-margin-required">$1,100.00</span></div>
+                                <div class="result-item"><span class="result-label">Free margin</span><span class="result-value" id="lev-free-margin">$8,900.00</span></div>
+                            </div>
+                            <div class="leverage-meter">
+                                <div class="meter-label"><span>Low risk</span><span>High risk</span></div>
+                                <div class="meter-bar"><div class="meter-fill" id="leverage-meter-fill" style="width: 11%"></div></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Compounding -->
+                <div class="calc-panel" id="calc-compound" data-group="calc">
+                    <div class="calc-grid">
+                        <div class="card calc-form" data-calc-fn="calculateCompound">
+                            <h3>Compounding Calculator</h3>
+                            <p class="calc-desc">How an account grows when gains are reinvested every period.</p>
+                            <div class="form-row">
+                                <div class="form-group"><label for="cmp-start">Starting balance ($)</label><input type="number" id="cmp-start" value="1000" step="100" min="0" inputmode="decimal"></div>
+                                <div class="form-group"><label for="cmp-rate">Gain per period (%)</label><input type="number" id="cmp-rate" value="5" step="0.1" inputmode="decimal"></div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group"><label for="cmp-periods">Number of periods</label><input type="number" id="cmp-periods" value="12" step="1" min="1" max="1000" inputmode="numeric"></div>
+                                <div class="form-group">
+                                    <label for="cmp-unit">Period</label>
+                                    <select id="cmp-unit"><option value="Day">Days</option><option value="Week">Weeks</option><option value="Month" selected>Months</option><option value="Year">Years</option></select>
+                                </div>
+                            </div>
+                            <div class="form-group"><label for="cmp-deposit">Extra deposit per period ($)</label><input type="number" id="cmp-deposit" value="0" step="10" min="0" inputmode="decimal"></div>
+                            <button class="btn-calculate" onclick="calculateCompound()"><i class="fas fa-calculator"></i> Calculate growth</button>
+                        </div>
+                        <div class="calc-result">
+                            <h3>Results</h3>
+                            <div class="result-hero"><div class="label">Final balance</div><div class="big" id="cmp-final">$0.00</div></div>
+                            <div class="result-card">
+                                <div class="result-item"><span class="result-label">Total profit</span><span class="result-value profit" id="cmp-profit">$0.00</span></div>
+                                <div class="result-item"><span class="result-label">Total deposits</span><span class="result-value" id="cmp-deposits">$0.00</span></div>
+                                <div class="result-item"><span class="result-label">Total return</span><span class="result-value" id="cmp-return">0%</span></div>
+                            </div>
+                            <div class="mini-title">Balance growth</div>
+                            <div id="cmp-chart"></div>
+                        </div>
+                    </div>
+                    <div class="card" style="margin-top:14px">
+                        <div class="card-head"><h3>Period breakdown</h3></div>
+                        <div class="tbl-wrap tall"><table class="tbl"><thead><tr><th>Period</th><th class="num">Start</th><th class="num">Gain</th><th class="num">Deposit</th><th class="num">End balance</th></tr></thead><tbody id="cmp-table"></tbody></table></div>
+                    </div>
+                </div>
+
+                <!-- Drawdown -->
+                <div class="calc-panel" id="calc-drawdown" data-group="calc">
+                    <div class="calc-grid">
+                        <div class="card calc-form" data-calc-fn="calculateDrawdown">
+                            <h3>Drawdown Recovery Calculator</h3>
+                            <p class="calc-desc">After a loss, you need a bigger gain just to get back to where you started.</p>
+                            <div class="form-row">
+                                <div class="form-group"><label for="dd-balance">Peak balance ($)</label><input type="number" id="dd-balance" value="10000" step="100" min="0" inputmode="decimal"></div>
+                                <div class="form-group"><label for="dd-pct">Drawdown (%)</label><input type="number" id="dd-pct" value="20" step="1" min="0" max="99.9" inputmode="decimal"></div>
+                            </div>
+                            <div class="form-group"><label for="dd-rate">Your average gain per trade / month (%)</label><input type="number" id="dd-rate" value="2" step="0.1" min="0.01" inputmode="decimal"></div>
+                            <button class="btn-calculate" onclick="calculateDrawdown()"><i class="fas fa-calculator"></i> Calculate recovery</button>
+                        </div>
+                        <div class="calc-result">
+                            <h3>Results</h3>
+                            <div class="result-hero"><div class="label">Gain needed to recover</div><div class="big" id="dd-needed">25.00%</div></div>
+                            <div class="result-card">
+                                <div class="result-item"><span class="result-label">Balance after drawdown</span><span class="result-value loss" id="dd-after">$8,000.00</span></div>
+                                <div class="result-item"><span class="result-label">Amount lost</span><span class="result-value loss" id="dd-lost">$2,000.00</span></div>
+                                <div class="result-item"><span class="result-label">Periods to recover at your rate</span><span class="result-value" id="dd-periods">12</span></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card" style="margin-top:14px">
+                        <div class="card-head"><h3>Drawdown recovery table</h3><span class="sub">Gain required to get back to break-even</span></div>
+                        <div class="tbl-wrap"><table class="tbl"><thead><tr><th>Loss</th><th class="num">Gain to recover</th><th style="width:45%">Difficulty</th></tr></thead><tbody id="dd-table"></tbody></table></div>
+                    </div>
+                </div>
+
+                <!-- Currency converter -->
+                <div class="calc-panel" id="calc-converter" data-group="calc">
+                    <div class="calc-grid">
+                        <div class="card calc-form">
+                            <h3>Currency Converter</h3>
+                            <p class="calc-desc">Daily reference rates from the free ExchangeRate-API open feed.</p>
+                            <div class="form-group"><label for="cv-amount">Amount</label><input type="number" id="cv-amount" value="1000" step="any" min="0" inputmode="decimal"></div>
+                            <div class="form-row">
+                                <div class="form-group"><label for="cv-from">From</label><select id="cv-from"></select></div>
+                                <div class="form-group"><label for="cv-to">To</label><select id="cv-to"></select></div>
+                            </div>
+                            <div class="btn-row">
+                                <button type="button" class="btn btn-ghost" id="cv-swap"><i class="fas fa-right-left"></i> Swap</button>
+                                <button type="button" class="btn btn-ghost" id="cv-refresh"><i class="fas fa-rotate"></i> Refresh rates</button>
+                            </div>
+                        </div>
+                        <div class="calc-result">
+                            <h3>Result</h3>
+                            <div class="result-hero"><div class="label" id="cv-label">Converted amount</div><div class="big" id="cv-result">–</div></div>
+                            <div class="result-card">
+                                <div class="result-item"><span class="result-label">Exchange rate</span><span class="result-value" id="cv-rate">–</span></div>
+                                <div class="result-item"><span class="result-label">Inverse rate</span><span class="result-value" id="cv-inverse">–</span></div>
+                                <div class="result-item"><span class="result-label">Rates updated</span><span class="result-value" id="cv-updated" style="font-size:.8rem">–</span></div>
+                            </div>
+                            <div class="result-info"><i class="fas fa-info-circle"></i><span>Reference mid-market rates, updated once a day. Your broker's live price will differ. <a href="https://www.exchangerate-api.com" target="_blank" rel="noopener">Rates by ExchangeRate-API</a></span></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ============ ANALYSIS ============ -->
+            <section class="view" id="view-analysis" data-title="Fibonacci &amp; Pivots">
+                <div class="view-head">
+                    <h1>Fibonacci &amp; pivot points</h1>
+                    <p>Map key support and resistance levels from a swing or from the previous session.</p>
+                </div>
+                <div class="calc-tabs" data-group="analysis">
+                    <button class="calc-tab active" data-calc="fib"><i class="fas fa-wave-square"></i> Fibonacci</button>
+                    <button class="calc-tab" data-calc="pivot"><i class="fas fa-bars-staggered"></i> Pivot Points</button>
+                </div>
+
+                <div class="calc-panel active" id="calc-fib" data-group="analysis">
+                    <div class="calc-grid">
+                        <div class="card calc-form" data-calc-fn="calculateFib">
+                            <h3>Fibonacci Retracement &amp; Extension</h3>
+                            <p class="calc-desc">Enter the swing high and low. Pick the trend you are trading.</p>
+                            <div class="form-group">
+                                <label>Trend</label>
+                                <div class="seg" data-target="fib-trend">
+                                    <button type="button" class="active buy" data-value="up">Uptrend (low → high)</button>
+                                    <button type="button" class="sell" data-value="down">Downtrend (high → low)</button>
+                                </div>
+                                <select id="fib-trend" class="hidden"><option value="up">Up</option><option value="down">Down</option></select>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group"><label for="fib-high">Swing high</label><input type="number" id="fib-high" value="1.1200" step="any" inputmode="decimal"></div>
+                                <div class="form-group"><label for="fib-low">Swing low</label><input type="number" id="fib-low" value="1.1000" step="any" inputmode="decimal"></div>
+                            </div>
+                            <div class="form-group">
+                                <label for="fib-decimals">Decimals</label>
+                                <select id="fib-decimals"><option value="2">2 (JPY, gold)</option><option value="3">3 (JPY pairs, silver)</option><option value="4">4</option><option value="5" selected>5 (most pairs)</option></select>
+                            </div>
+                            <button class="btn-calculate" onclick="calculateFib()"><i class="fas fa-calculator"></i> Calculate levels</button>
+                        </div>
+                        <div class="calc-result">
+                            <h3>Retracement levels</h3>
+                            <div class="ladder" id="fib-retrace" style="margin-top:10px"></div>
+                            <div class="mini-title">Extension levels</div>
+                            <div class="ladder" id="fib-ext"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="calc-panel" id="calc-pivot" data-group="analysis">
+                    <div class="calc-grid">
+                        <div class="card calc-form" data-calc-fn="calculatePivots">
+                            <h3>Pivot Point Calculator</h3>
+                            <p class="calc-desc">Use the previous day's (or week's) high, low and close.</p>
+                            <div class="form-row">
+                                <div class="form-group"><label for="pv-high">High</label><input type="number" id="pv-high" value="1.1050" step="any" inputmode="decimal"></div>
+                                <div class="form-group"><label for="pv-low">Low</label><input type="number" id="pv-low" value="1.0950" step="any" inputmode="decimal"></div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group"><label for="pv-close">Close</label><input type="number" id="pv-close" value="1.1020" step="any" inputmode="decimal"></div>
+                                <div class="form-group">
+                                    <label for="pv-decimals">Decimals</label>
+                                    <select id="pv-decimals"><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5" selected>5</option></select>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="pv-method">Show ladder for</label>
+                                <select id="pv-method"><option value="classic">Classic</option><option value="fibonacci">Fibonacci</option><option value="camarilla">Camarilla</option><option value="woodie">Woodie</option></select>
+                            </div>
+                            <button class="btn-calculate" onclick="calculatePivots()"><i class="fas fa-calculator"></i> Calculate pivots</button>
+                        </div>
+                        <div class="calc-result">
+                            <h3 id="pv-ladder-title">Classic pivots</h3>
+                            <div class="ladder" id="pv-ladder" style="margin-top:10px"></div>
+                        </div>
+                    </div>
+                    <div class="card" style="margin-top:14px">
+                        <div class="card-head"><h3>All methods compared</h3></div>
+                        <div class="tbl-wrap"><table class="tbl"><thead><tr><th>Level</th><th class="num">Classic</th><th class="num">Fibonacci</th><th class="num">Camarilla</th><th class="num">Woodie</th></tr></thead><tbody id="pv-table"></tbody></table></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ============ SESSIONS ============ -->
+            <section class="view" id="view-sessions" data-title="Market Sessions">
+                <div class="view-head">
+                    <h1>Forex market sessions</h1>
+                    <p>Live open/closed status for each trading centre, with times in Pakistan time (PKT) and your local time. Daylight-saving changes are handled automatically.</p>
+                </div>
+                <div class="grid grid-2">
+                    <div class="card" style="margin:0">
+                        <div class="card-head"><div class="card-icon"><i class="fas fa-clock"></i></div><h2>Now</h2><span class="spacer"></span><span class="pill" id="sess-market-pill">–</span></div>
+                        <div class="big-clock" id="sess-pkt-clock">--:--:--</div>
+                        <div class="muted" id="sess-pkt-date" style="font-size:.85rem">Pakistan Standard Time (UTC+5)</div>
+                        <div class="muted" id="sess-local-clock" style="font-size:.85rem;margin-top:4px"></div>
+                    </div>
+                    <div class="card" style="margin:0">
+                        <div class="card-head"><div class="card-icon"><i class="fas fa-layer-group"></i></div><h2>Session overlaps</h2><span class="sub">Highest liquidity</span></div>
+                        <div id="sess-overlaps"></div>
+                    </div>
+                </div>
+                <div class="card" style="margin-top:14px">
+                    <div class="card-head"><h2>Trading centres</h2><span class="spacer"></span>
+                        <div class="seg" style="width:auto" id="sess-tz-seg">
+                            <button type="button" class="active" data-value="pkt" style="padding:0 12px">PKT</button>
+                            <button type="button" data-value="local" style="padding:0 12px">My time</button>
+                        </div>
+                    </div>
+                    <div class="session-list" id="sess-list"></div>
+                </div>
+                <div class="card">
+                    <div class="card-head"><h2>24-hour timeline</h2><span class="sub" id="tl-zone-label">PKT</span></div>
+                    <div class="timeline" id="sess-timeline"></div>
+                    <div class="result-info" style="margin-top:12px"><i class="fas fa-info-circle"></i><span>Session hours are typical local business hours (Sydney 07:00–16:00, Tokyo 09:00–18:00, London 08:00–17:00, New York 08:00–17:00 local time). The forex market is closed from Friday 17:00 to Sunday 17:00 New York time.</span></div>
+                </div>
+            </section>
+
+            <!-- ============ CHARTS ============ -->
+            <section class="view" id="view-charts" data-title="Live Chart">
+                <div class="view-head">
+                    <h1>Live trading chart</h1>
+                    <p>Powered by TradingView. Pick a pair and timeframe; indicators and drawing tools are built in.</p>
+                </div>
+                <div class="chart-controls">
+                    <div class="chart-pair-select">
+                        <select id="chart-pair" class="select" aria-label="Chart symbol" onchange="updateChart()">
+                            <optgroup label="Major Pairs">
+                                <option value="FX:EURUSD" selected>EUR/USD</option><option value="FX:GBPUSD">GBP/USD</option><option value="FX:USDJPY">USD/JPY</option>
+                                <option value="FX:USDCHF">USD/CHF</option><option value="FX:AUDUSD">AUD/USD</option><option value="FX:NZDUSD">NZD/USD</option><option value="FX:USDCAD">USD/CAD</option>
+                            </optgroup>
+                            <optgroup label="Metals">
+                                <option value="OANDA:XAUUSD">XAU/USD (Gold)</option><option value="OANDA:XAGUSD">XAG/USD (Silver)</option>
+                            </optgroup>
+                            <optgroup label="Cross Pairs">
+                                <option value="FX:EURGBP">EUR/GBP</option><option value="FX:EURJPY">EUR/JPY</option><option value="FX:GBPJPY">GBP/JPY</option>
+                                <option value="FX:EURAUD">EUR/AUD</option><option value="FX:EURCHF">EUR/CHF</option><option value="FX:EURCAD">EUR/CAD</option>
+                                <option value="FX:EURNZD">EUR/NZD</option><option value="FX:GBPAUD">GBP/AUD</option><option value="FX:GBPCAD">GBP/CAD</option>
+                                <option value="FX:GBPCHF">GBP/CHF</option><option value="FX:GBPNZD">GBP/NZD</option><option value="FX:AUDJPY">AUD/JPY</option>
+                                <option value="FX:AUDNZD">AUD/NZD</option><option value="FX:AUDCAD">AUD/CAD</option><option value="FX:AUDCHF">AUD/CHF</option>
+                                <option value="FX:NZDJPY">NZD/JPY</option><option value="FX:NZDCAD">NZD/CAD</option><option value="FX:NZDCHF">NZD/CHF</option>
+                                <option value="FX:CADJPY">CAD/JPY</option><option value="FX:CADCHF">CAD/CHF</option><option value="FX:CHFJPY">CHF/JPY</option>
+                            </optgroup>
+                            <optgroup label="Exotic Pairs">
+                                <option value="FX:USDTRY">USD/TRY</option><option value="FX:USDMXN">USD/MXN</option><option value="FX:USDZAR">USD/ZAR</option>
+                                <option value="FX:USDSEK">USD/SEK</option><option value="FX:USDNOK">USD/NOK</option><option value="FX:USDDKK">USD/DKK</option>
+                                <option value="FX:USDSGD">USD/SGD</option><option value="FX:USDHKD">USD/HKD</option><option value="FX:USDPLN">USD/PLN</option>
+                                <option value="FX:USDCNH">USD/CNH</option><option value="FX_IDC:USDPKR">USD/PKR</option>
+                            </optgroup>
+                        </select>
+                    </div>
+                    <div class="chart-timeframes">
+                        <button class="tf-btn" data-tf="1">1m</button>
+                        <button class="tf-btn" data-tf="5">5m</button>
+                        <button class="tf-btn" data-tf="15">15m</button>
+                        <button class="tf-btn active" data-tf="60">1H</button>
+                        <button class="tf-btn" data-tf="240">4H</button>
+                        <button class="tf-btn" data-tf="D">1D</button>
+                        <button class="tf-btn" data-tf="W">1W</button>
+                    </div>
+                </div>
+                <div class="chart-container" id="tradingview-chart"></div>
+                <div class="card" style="margin-top:14px">
+                    <div class="card-head"><div class="card-icon"><i class="fas fa-gauge"></i></div><h2>Technical summary</h2><span class="sub" id="ta-symbol-label">EUR/USD</span></div>
+                    <div class="widget-box h-420" id="ta-widget"></div>
+                </div>
+            </section>
+
+            <!-- ============ MARKETS (heatmap + cross rates) ============ -->
+            <section class="view" id="view-markets" data-title="Heatmap &amp; Rates">
+                <div class="view-head">
+                    <h1>Forex heatmap &amp; cross rates</h1>
+                    <p>See which currencies are strongest and weakest right now, and every major cross rate at a glance.</p>
+                </div>
+                <div class="card">
+                    <div class="card-head"><div class="card-icon"><i class="fas fa-fire"></i></div><h2>Currency heatmap</h2></div>
+                    <div class="widget-box h-500" id="heatmap-widget"></div>
+                </div>
+                <div class="card">
+                    <div class="card-head"><div class="card-icon"><i class="fas fa-table"></i></div><h2>Cross rates</h2></div>
+                    <div class="widget-box h-500" id="cross-rates-widget"></div>
+                </div>
+            </section>
+
+            <!-- ============ CALENDAR ============ -->
+            <section class="view" id="view-calendar" data-title="Economic Calendar">
+                <div class="view-head">
+                    <h1>Economic calendar</h1>
+                    <p>Upcoming news and data releases that move the forex market. High-impact events often bring sharp volatility.</p>
+                </div>
+                <div class="widget-box h-640" id="calendar-widget"></div>
+            </section>
+
+            <!-- ============ JOURNAL ============ -->
+            <section class="view" id="view-journal" data-title="Trading Journal">
+                <div class="view-head">
+                    <h1>Trading journal</h1>
+                    <p>Log your trades to see what works. Your journal is saved only in this browser on this device.</p>
+                </div>
+                <div class="stat-grid">
+                    <div class="stat"><div class="k">Trades</div><div class="v" id="j-total">0</div></div>
+                    <div class="stat"><div class="k">Win rate</div><div class="v" id="j-winrate">–</div></div>
+                    <div class="stat"><div class="k">Total P/L</div><div class="v" id="j-pl">$0.00</div></div>
+                    <div class="stat"><div class="k">Profit factor</div><div class="v" id="j-pf">–</div></div>
+                    <div class="stat"><div class="k">Avg win</div><div class="v up" id="j-avgwin">–</div></div>
+                    <div class="stat"><div class="k">Avg loss</div><div class="v down" id="j-avgloss">–</div></div>
+                </div>
+                <div class="card">
+                    <div class="card-head">
+                        <h2>Equity curve</h2><span class="sub">Cumulative P/L</span>
+                    </div>
+                    <div id="j-chart"><div class="empty"><i class="fas fa-chart-line"></i>Add trades to see your equity curve.</div></div>
+                </div>
+                <div class="card">
+                    <div class="card-head">
+                        <h2>Trades</h2>
+                        <span class="spacer"></span>
+                        <div class="btn-row">
+                            <button class="btn btn-sm" id="j-add"><i class="fas fa-plus"></i> Add trade</button>
+                            <button class="btn btn-ghost btn-sm" id="j-export"><i class="fas fa-file-csv"></i> Export CSV</button>
+                            <label class="btn btn-ghost btn-sm" style="cursor:pointer"><i class="fas fa-file-import"></i> Import CSV<input type="file" id="j-import" accept=".csv,text/csv" hidden></label>
+                            <button class="btn btn-danger btn-sm" id="j-clear"><i class="fas fa-trash"></i> Clear all</button>
+                        </div>
+                    </div>
+                    <div class="tbl-wrap">
+                        <table class="tbl">
+                            <thead><tr><th>Date</th><th>Pair</th><th>Side</th><th class="num">Lots</th><th class="num">Entry</th><th class="num">Exit</th><th class="num">Pips</th><th class="num">P/L</th><th>Notes</th><th></th></tr></thead>
+                            <tbody id="j-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ============ PAIRS ============ -->
+            <section class="view" id="view-pairs" data-title="All Pairs">
+                <div class="view-head">
+                    <h1>All forex pairs</h1>
+                    <p>Browse majors, crosses, exotics and metals. Tap a pair to open its live chart.</p>
+                </div>
+                <div class="pairs-toolbar">
+                    <div class="pairs-filter">
+                        <button class="filter-btn active" data-filter="all">All</button>
+                        <button class="filter-btn" data-filter="major">Major</button>
+                        <button class="filter-btn" data-filter="cross">Cross</button>
+                        <button class="filter-btn" data-filter="exotic">Exotic</button>
+                        <button class="filter-btn" data-filter="metal">Metals</button>
+                    </div>
+                    <div class="pairs-search">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="pair-search" placeholder="Search pairs…" oninput="filterPairs()" aria-label="Search pairs">
+                    </div>
+                </div>
+                <div class="pairs-grid" id="pairs-grid"></div>
+            </section>
+
+            <!-- ============ GUIDE ============ -->
+            <section class="view" id="view-guide" data-title="How to Use">
+                <div class="view-head">
+                    <h1>How to use the calculators</h1>
+                    <p>A quick guide to getting accurate results from every tool.</p>
+                </div>
+                <div class="card">
+                    <p class="guide-paragraph">
+                        Open <strong>Calculators</strong> from the menu and pick the tab you need — <strong>Pip Value</strong> for the value of one pip, <strong>Position Size</strong> for how big your trade should be, <strong>Profit / Loss</strong> for the result of a trade, <strong>Risk : Reward</strong> to check a setup before you take it, <strong>Margin</strong> and <strong>Leverage</strong> for your exposure, plus <strong>Compounding</strong>, <strong>Drawdown</strong> and a <strong>Currency Converter</strong>. Select your pair (forex majors and crosses, plus <strong>XAU/USD Gold</strong> and <strong>XAG/USD Silver</strong> under "Metals"), fill in the boxes, and results update instantly — you can also press <strong>Calculate</strong>. When you change the pair, the sample price updates automatically so the numbers stay realistic, but any price you type yourself is never overwritten. Key conventions: one standard forex lot is 100,000 units (JPY pairs use a pip size of 0.01), one lot of Gold is 100 troy ounces and one lot of Silver is 5,000 troy ounces. Cross pairs are converted to USD using reference rates. Always double-check your broker's contract specifications, and never risk more than 1–2% of your account on a single trade.
+                    </p>
+                    <div class="guide-grid">
+                        <div class="guide-card"><div class="guide-card-icon"><i class="fas fa-layer-group"></i></div><h4>Position Size</h4><p>Choose Risk % or a fixed $ amount, enter your stop loss in pips — get the lot size that risks exactly that much.</p></div>
+                        <div class="guide-card"><div class="guide-card-icon"><i class="fas fa-scale-unbalanced"></i></div><h4>Risk : Reward</h4><p>Enter entry, stop and target prices to see the ratio and the win rate you need just to break even.</p></div>
+                        <div class="guide-card"><div class="guide-card-icon"><i class="fas fa-wave-square"></i></div><h4>Fibonacci</h4><p>Enter a swing high and low. Uptrend levels are measured from the low up; downtrend from the high down.</p></div>
+                        <div class="guide-card"><div class="guide-card-icon"><i class="fas fa-bars-staggered"></i></div><h4>Pivot Points</h4><p>Use the previous day's high, low and close. Compare Classic, Fibonacci, Camarilla and Woodie side by side.</p></div>
+                        <div class="guide-card"><div class="guide-card-icon"><i class="fas fa-clock"></i></div><h4>Market Sessions</h4><p>See which centres are open now in PKT and your own time. The London–New York overlap is usually the busiest.</p></div>
+                        <div class="guide-card"><div class="guide-card-icon"><i class="fas fa-book"></i></div><h4>Trading Journal</h4><p>Add, edit and delete trades. Leave P/L blank to auto-calculate it. Export to CSV to back up your journal.</p></div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- ================= Footer ================= -->
+        <footer class="footer">
+            <div class="footer-inner">
+                <div class="disclaimer-box">
+                    <i class="fas fa-triangle-exclamation"></i>
+                    <div><strong>For educational purposes only — not financial advice.</strong> Trading forex and CFDs on margin carries a high level of risk and may not be suitable for all investors; you can lose more than your deposit. Calculations are estimates based on standard contract sizes and reference rates — always confirm with your broker. Past performance is not indicative of future results.</div>
+                </div>
+                <div class="footer-bottom">
+                    <span>&copy; <span id="year">2026</span> Forex Pro Calculator. Charts and market data widgets by <a href="https://www.tradingview.com/" target="_blank" rel="noopener">TradingView</a>.</span>
+                    <div class="footer-links">
+                        <a href="#calculators">Calculators</a>
+                        <a href="#sessions">Sessions</a>
+                        <a href="#charts">Charts</a>
+                        <a href="#journal">Journal</a>
+                        <a href="#guide">Guide</a>
+                    </div>
+                </div>
             </div>
+        </footer>
+    </div>
+</div>
+
+<!-- Journal modal -->
+<div class="modal" id="j-modal" role="dialog" aria-modal="true" aria-labelledby="j-modal-title">
+    <form class="modal-card" id="j-form" autocomplete="off">
+        <div class="card-head"><h3 id="j-modal-title">Add trade</h3><span class="spacer"></span><button type="button" class="icon-btn" id="j-close" aria-label="Close"><i class="fas fa-xmark"></i></button></div>
+        <input type="hidden" id="jf-id">
+        <div class="form-row">
+            <div class="form-group"><label for="jf-date">Date</label><input type="date" id="jf-date" required></div>
+            <div class="form-group"><label for="jf-pair">Pair</label><select id="jf-pair" class="pair-select" data-include="all"></select></div>
         </div>
-    </section>
-
-    <!-- Trading Chart Section -->
-    <section id="chart" class="section section-dark">
-        <div class="container">
-            <h2 class="section-title"><i class="fas fa-chart-area"></i> Live Trading Chart</h2>
-            <p class="section-subtitle">Powered by TradingView — Select any forex pair to view live charts</p>
-            
-            <div class="chart-controls">
-                <div class="chart-pair-select">
-                    <label>Select Pair:</label>
-                    <select id="chart-pair" onchange="updateChart()">
-                        <optgroup label="Major Pairs">
-                            <option value="FX:EURUSD" selected>EUR/USD</option>
-                            <option value="FX:GBPUSD">GBP/USD</option>
-                            <option value="FX:USDJPY">USD/JPY</option>
-                            <option value="FX:USDCHF">USD/CHF</option>
-                            <option value="FX:AUDUSD">AUD/USD</option>
-                            <option value="FX:NZDUSD">NZD/USD</option>
-                            <option value="FX:USDCAD">USD/CAD</option>
-                        </optgroup>
-                        <optgroup label="Cross Pairs">
-                            <option value="FX:EURGBP">EUR/GBP</option>
-                            <option value="FX:EURJPY">EUR/JPY</option>
-                            <option value="FX:GBPJPY">GBP/JPY</option>
-                            <option value="FX:EURAUD">EUR/AUD</option>
-                            <option value="FX:EURCHF">EUR/CHF</option>
-                            <option value="FX:EURCAD">EUR/CAD</option>
-                            <option value="FX:EURNZD">EUR/NZD</option>
-                            <option value="FX:GBPAUD">GBP/AUD</option>
-                            <option value="FX:GBPCAD">GBP/CAD</option>
-                            <option value="FX:GBPCHF">GBP/CHF</option>
-                            <option value="FX:GBPNZD">GBP/NZD</option>
-                            <option value="FX:AUDJPY">AUD/JPY</option>
-                            <option value="FX:AUDNZD">AUD/NZD</option>
-                            <option value="FX:AUDCAD">AUD/CAD</option>
-                            <option value="FX:AUDCHF">AUD/CHF</option>
-                            <option value="FX:NZDJPY">NZD/JPY</option>
-                            <option value="FX:NZDCAD">NZD/CAD</option>
-                            <option value="FX:NZDCHF">NZD/CHF</option>
-                            <option value="FX:CADJPY">CAD/JPY</option>
-                            <option value="FX:CADCHF">CAD/CHF</option>
-                            <option value="FX:CHFJPY">CHF/JPY</option>
-                        </optgroup>
-                        <optgroup label="Exotic Pairs">
-                            <option value="FX:USDTRY">USD/TRY</option>
-                            <option value="FX:USDMXN">USD/MXN</option>
-                            <option value="FX:USDZAR">USD/ZAR</option>
-                            <option value="FX:USDSEK">USD/SEK</option>
-                            <option value="FX:USDNOK">USD/NOK</option>
-                            <option value="FX:USDDKK">USD/DKK</option>
-                            <option value="FX:USDSGD">USD/SGD</option>
-                            <option value="FX:USDHKD">USD/HKD</option>
-                            <option value="FX:USDPLN">USD/PLN</option>
-                            <option value="FX:USDCNH">USD/CNH</option>
-                        </optgroup>
-                    </select>
-                </div>
-                <div class="chart-timeframes">
-                    <button class="tf-btn active" data-tf="1">1m</button>
-                    <button class="tf-btn" data-tf="5">5m</button>
-                    <button class="tf-btn" data-tf="15">15m</button>
-                    <button class="tf-btn" data-tf="60">1H</button>
-                    <button class="tf-btn" data-tf="240">4H</button>
-                    <button class="tf-btn" data-tf="D">1D</button>
-                    <button class="tf-btn" data-tf="W">1W</button>
-                </div>
+        <div class="form-group">
+            <label>Direction</label>
+            <div class="seg" data-target="jf-dir">
+                <button type="button" class="active buy" data-value="buy">Buy</button>
+                <button type="button" class="sell" data-value="sell">Sell</button>
             </div>
-
-            <div class="chart-container" id="tradingview-chart">
-                <!-- TradingView Widget -->
-            </div>
+            <select id="jf-dir" class="hidden"><option value="buy">Buy</option><option value="sell">Sell</option></select>
         </div>
-    </section>
-
-    <!-- All Pairs Section -->
-    <section id="pairs" class="section">
-        <div class="container">
-            <h2 class="section-title"><i class="fas fa-coins"></i> All Forex Pairs</h2>
-            <p class="section-subtitle">Browse and view all available forex trading pairs</p>
-            
-            <div class="pairs-filter">
-                <button class="filter-btn active" data-filter="all">All Pairs</button>
-                <button class="filter-btn" data-filter="major">Major</button>
-                <button class="filter-btn" data-filter="cross">Cross</button>
-                <button class="filter-btn" data-filter="exotic">Exotic</button>
-            </div>
-
-            <div class="pairs-search">
-                <i class="fas fa-search"></i>
-                <input type="text" id="pair-search" placeholder="Search pairs..." oninput="filterPairs()">
-            </div>
-
-            <!-- TradingView Market Overview Widget -->
-            <div class="market-overview-container" id="market-overview-widget">
-            </div>
-
-            <div class="pairs-grid" id="pairs-grid">
-                <!-- Pairs cards generated by JS -->
-            </div>
+        <div class="form-row">
+            <div class="form-group"><label for="jf-lots">Lots</label><input type="number" id="jf-lots" step="0.01" min="0.01" value="0.10" required inputmode="decimal"></div>
+            <div class="form-group"><label for="jf-pl">P/L ($) — blank = auto</label><input type="number" id="jf-pl" step="0.01" placeholder="auto" inputmode="decimal"></div>
         </div>
-    </section>
-
-    <!-- How to Use Guide Section -->
-    <section id="how-to-use" class="section section-dark">
-        <div class="container">
-            <h2 class="section-title"><i class="fas fa-circle-question"></i> How to Use the Calculators</h2>
-            <p class="section-subtitle">A quick guide to getting accurate results from every tool on this page</p>
-
-            <div class="guide-content">
-                <p class="guide-paragraph">
-                    Using these calculators is simple. Start at the top of the page and choose the calculator tab that matches what you want to know — <strong>Pip Calculator</strong> for the value of one pip, <strong>Lot Size</strong> for how big your trade should be, <strong>Leverage</strong> for your effective exposure, <strong>Margin</strong> for the money required to open a position, and <strong>Pips Move</strong> for the profit or loss of a trade. In each calculator, select your currency pair from the dropdown (forex majors and crosses, plus <strong>XAU/USD Gold</strong> and <strong>XAG/USD Silver</strong> under "Metals"), then fill in the input boxes: enter your trade size in lots, your current or entry price, and — depending on the tool — your account balance, risk percentage, stop-loss in pips, or preferred leverage. When you change the pair, the sample price updates automatically so the numbers stay realistic, but any price you type yourself is never overwritten. Finally, click the <strong>Calculate</strong> button and your results appear instantly on the right — pip value, recommended lot size, required margin, effective leverage or projected profit/loss, all formatted in USD. Remember the key conventions: one standard forex lot is 100,000 units (JPY pairs use a pip size of 0.01), while one lot of Gold is 100 troy ounces and one lot of Silver is 5,000 troy ounces. Always double-check your broker's contract specifications before trading, and never risk more than 1–2% of your account on a single trade.
-                </p>
-
-                <div class="guide-grid">
-                    <div class="guide-card">
-                        <div class="guide-card-icon"><i class="fas fa-exchange-alt"></i></div>
-                        <h4>Pip Calculator</h4>
-                        <p>Pick a pair, enter your lots and the current price, then hit calculate to see what one pip is worth for your trade.</p>
-                    </div>
-                    <div class="guide-card">
-                        <div class="guide-card-icon"><i class="fas fa-layer-group"></i></div>
-                        <h4>Lot Size</h4>
-                        <p>Enter your account balance, risk % and stop-loss in pips — the calculator recommends the safest lot size for that risk.</p>
-                    </div>
-                    <div class="guide-card">
-                        <div class="guide-card-icon"><i class="fas fa-balance-scale"></i></div>
-                        <h4>Leverage</h4>
-                        <p>Enter your equity, lots and price to see your effective leverage ratio, position value and margin at 1:100.</p>
-                    </div>
-                    <div class="guide-card">
-                        <div class="guide-card-icon"><i class="fas fa-shield-alt"></i></div>
-                        <h4>Margin</h4>
-                        <p>Choose a pair, lots and leverage (1:1 up to 1:1000) to find out exactly how much margin your broker will lock.</p>
-                    </div>
-                    <div class="guide-card">
-                        <div class="guide-card-icon"><i class="fas fa-chart-line"></i></div>
-                        <h4>Pips Move</h4>
-                        <p>Enter your entry and exit prices with a buy or sell direction to instantly project your profit or loss in pips and dollars.</p>
-                    </div>
-                    <div class="guide-card">
-                        <div class="guide-card-icon"><i class="fas fa-coins"></i></div>
-                        <h4>Metals (Gold &amp; Silver)</h4>
-                        <p>Select XAU/USD or XAG/USD from the Metals group — contract sizes of 100 oz (Gold) and 5,000 oz (Silver) are applied automatically.</p>
-                    </div>
-                </div>
-            </div>
+        <div class="form-row">
+            <div class="form-group"><label for="jf-entry">Entry price</label><input type="number" id="jf-entry" step="any" required inputmode="decimal"></div>
+            <div class="form-group"><label for="jf-exit">Exit price</label><input type="number" id="jf-exit" step="any" required inputmode="decimal"></div>
         </div>
-    </section>
-
-    <!-- Footer -->
-    <footer class="footer">
-        <div class="container">
-            <div class="footer-grid">
-                <div class="footer-col">
-                    <h4><i class="fas fa-chart-line"></i> ForexProCalc</h4>
-                    <p>Professional forex trading calculators and live chart analysis tools for traders of all levels.</p>
-                </div>
-                <div class="footer-col">
-                    <h4>Calculators</h4>
-                    <ul>
-                        <li><a href="#" onclick="switchCalc('pip')">Pip Calculator</a></li>
-                        <li><a href="#" onclick="switchCalc('lot')">Lot Size Calculator</a></li>
-                        <li><a href="#" onclick="switchCalc('leverage')">Leverage Calculator</a></li>
-                        <li><a href="#" onclick="switchCalc('margin')">Margin Calculator</a></li>
-                        <li><a href="#" onclick="switchCalc('pipsmove')">Pips Move Calculator</a></li>
-                    </ul>
-                </div>
-                <div class="footer-col">
-                    <h4>Trading Tools</h4>
-                    <ul>
-                        <li><a href="#chart">Live Charts</a></li>
-                        <li><a href="#pairs">All Pairs</a></li>
-                        <li><a href="#calculators">Risk Calculator</a></li>
-                    </ul>
-                </div>
-                <div class="footer-col">
-                    <h4>Disclaimer</h4>
-                    <p class="disclaimer">Trading forex carries a high level of risk and may not be suitable for all investors. Past performance is not indicative of future results.</p>
-                </div>
-            </div>
-            <div class="footer-bottom">
-                <p>&copy; 2026 ForexProCalc. All rights reserved. Charts powered by TradingView.</p>
-            </div>
+        <div class="form-row">
+            <div class="form-group"><label for="jf-sl">Stop loss (optional)</label><input type="number" id="jf-sl" step="any" inputmode="decimal"></div>
+            <div class="form-group"><label for="jf-tp">Take profit (optional)</label><input type="number" id="jf-tp" step="any" inputmode="decimal"></div>
         </div>
-    </footer>
+        <div class="form-group"><label for="jf-notes">Notes / setup</label><textarea id="jf-notes" placeholder="Why did you take this trade? What did you learn?"></textarea></div>
+        <div class="btn-row" style="justify-content:flex-end">
+            <button type="button" class="btn btn-ghost" id="j-cancel">Cancel</button>
+            <button type="submit" class="btn"><i class="fas fa-check"></i> Save trade</button>
+        </div>
+    </form>
+</div>
 
-    <!-- TradingView Scripts -->
-    <script src="https://s3.tradingview.com/tv.js"></script>
-    <script src="js/calculator.js"></script>
-    <script src="js/chart.js"></script>
-    <script src="js/pairs.js"></script>
+<div class="toast" id="toast"></div>
+
+<!-- Scripts -->
+<script src="https://s3.tradingview.com/tv.js"></script>
+<script src="js/calculator.js"></script>
+<script src="js/tools.js"></script>
+<script src="js/sessions.js"></script>
+<script src="js/chart.js"></script>
+<script src="js/pairs.js"></script>
+<script src="js/journal.js"></script>
+<script src="js/app.js"></script>
 </body>
 </html>

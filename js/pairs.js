@@ -43,7 +43,12 @@ const forexPairs = [
     { symbol: 'USDSGD', name: 'USD/SGD', category: 'exotic', spread: '2.5', pipSize: '0.0001', desc: 'US Dollar / Singapore Dollar' },
     { symbol: 'USDHKD', name: 'USD/HKD', category: 'exotic', spread: '2.0', pipSize: '0.0001', desc: 'US Dollar / Hong Kong Dollar' },
     { symbol: 'USDPLN', name: 'USD/PLN', category: 'exotic', spread: '4.0', pipSize: '0.0001', desc: 'US Dollar / Polish Zloty' },
-    { symbol: 'USDCNH', name: 'USD/CNH', category: 'exotic', spread: '5.0', pipSize: '0.0001', desc: 'US Dollar / Chinese Yuan' }
+    { symbol: 'USDCNH', name: 'USD/CNH', category: 'exotic', spread: '5.0', pipSize: '0.0001', desc: 'US Dollar / Chinese Yuan' },
+    { symbol: 'USDPKR', name: 'USD/PKR', category: 'exotic', spread: '–', pipSize: '0.01', desc: 'US Dollar / Pakistani Rupee', lot: '–' },
+
+    // Metals
+    { symbol: 'XAUUSD', name: 'XAU/USD', category: 'metal', spread: '25', pipSize: '0.01', desc: 'Gold / US Dollar', lot: '100 oz' },
+    { symbol: 'XAGUSD', name: 'XAG/USD', category: 'metal', spread: '25', pipSize: '0.001', desc: 'Silver / US Dollar', lot: '5,000 oz' }
 ];
 
 let currentFilter = 'all';
@@ -51,72 +56,60 @@ let searchQuery = '';
 
 function renderPairs() {
     const grid = document.getElementById('pairs-grid');
-    
+
+    const q = searchQuery.trim().toLowerCase().replace('/', '');
     const filtered = forexPairs.filter(pair => {
         const matchFilter = currentFilter === 'all' || pair.category === currentFilter;
-        const matchSearch = searchQuery === '' || 
-            pair.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            pair.desc.toLowerCase().includes(searchQuery.toLowerCase());
+        const matchSearch = q === '' ||
+            pair.symbol.toLowerCase().includes(q) ||
+            pair.desc.toLowerCase().includes(q);
         return matchFilter && matchSearch;
     });
-    
+
     if (filtered.length === 0) {
-        grid.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: var(--text-secondary); padding: 40px;">No pairs found matching your criteria.</p>';
+        grid.innerHTML = '<div class="empty" style="grid-column:1/-1"><i class="fas fa-magnifying-glass"></i>No pairs found matching your search.</div>';
         return;
     }
-    
+
     grid.innerHTML = filtered.map(pair => `
-        <div class="pair-card" onclick="viewPairChart('${pair.symbol}')">
+        <div class="pair-card" role="button" tabindex="0" onclick="viewPairChart('${pair.symbol}')" onkeydown="if(event.key==='Enter')viewPairChart('${pair.symbol}')">
             <div class="pair-card-header">
                 <span class="pair-name">${pair.name}</span>
                 <span class="pair-badge badge-${pair.category}">${pair.category}</span>
             </div>
-            <div style="font-size: 0.85rem; color: var(--text-secondary);">${pair.desc}</div>
+            <div class="pair-desc">${pair.desc}</div>
             <div class="pair-info">
-                <span class="pair-info-label">Pip Size</span>
+                <span class="pair-info-label">Pip size</span>
                 <span class="pair-info-value">${pair.pipSize}</span>
             </div>
             <div class="pair-info">
-                <span class="pair-info-label">Avg Spread</span>
-                <span class="pair-info-value pair-spread">${pair.spread} pips</span>
+                <span class="pair-info-label">Avg spread</span>
+                <span class="pair-info-value">${pair.spread}${pair.spread === '–' ? '' : ' pips'}</span>
             </div>
             <div class="pair-info">
-                <span class="pair-info-label">Lot Size</span>
-                <span class="pair-info-value">100,000</span>
+                <span class="pair-info-label">1 lot</span>
+                <span class="pair-info-value">${pair.lot || '100,000'}</span>
             </div>
-            <button class="pair-view-btn">
-                <i class="fas fa-chart-area"></i> View Chart
+            <button class="pair-view-btn" tabindex="-1">
+                <i class="fas fa-chart-area"></i> View chart
             </button>
         </div>
     `).join('');
 }
 
 function viewPairChart(symbol) {
-    // Switch to chart section and load the pair
+    // Select the pair in the chart dropdown (any exchange prefix) and open the chart view
     const chartPairSelect = document.getElementById('chart-pair');
-    const optionValue = 'FX:' + symbol;
-    
-    // Find and select the option
     for (let i = 0; i < chartPairSelect.options.length; i++) {
-        if (chartPairSelect.options[i].value === optionValue) {
+        if (chartPairSelect.options[i].value.split(':').pop() === symbol) {
             chartPairSelect.selectedIndex = i;
             break;
         }
     }
-    
-    // Scroll to chart section
-    document.getElementById('chart').scrollIntoView({ behavior: 'smooth' });
-    
-    // Update the chart
-    setTimeout(() => {
-        if (typeof updateChart === 'function') {
-            updateChart();
-        }
-    }, 300);
-    
-    // Update nav active state
-    document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
-    document.querySelector('.nav-link[data-section="chart"]').classList.add('active');
+    // showView loads the chart the first time; afterwards refresh it for the new pair
+    const alreadyLoaded = typeof loadedWidgets !== 'undefined' && loadedWidgets.has('charts');
+    if (typeof showView === 'function') showView('charts');
+    if (alreadyLoaded && typeof updateChart === 'function') updateChart();
 }
 
 function filterPairs() {
@@ -134,76 +127,4 @@ document.querySelectorAll('.filter-btn').forEach(btn => {
     });
 });
 
-// Load TradingView Market Overview Widget
-function loadMarketOverviewWidget() {
-    const container = document.getElementById('market-overview-widget');
-    container.innerHTML = '';
-    
-    const script = document.createElement('script');
-    script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-market-overview.js';
-    script.async = true;
-    script.innerHTML = JSON.stringify({
-        "colorTheme": "dark",
-        "dateRange": "12M",
-        "showChart": true,
-        "locale": "en",
-        "largeChartUrl": "",
-        "isTransparent": true,
-        "showSymbolLogo": true,
-        "showFloatingTooltip": true,
-        "width": "100%",
-        "height": "450",
-        "plotLineColorGrowing": "rgba(14, 165, 233, 1)",
-        "plotLineColorFalling": "rgba(239, 68, 68, 1)",
-        "gridLineColor": "rgba(51, 65, 85, 0.5)",
-        "scaleFontColor": "rgba(148, 163, 184, 1)",
-        "belowLineFillColorGrowing": "rgba(14, 165, 233, 0.12)",
-        "belowLineFillColorFalling": "rgba(239, 68, 68, 0.12)",
-        "belowLineFillColorGrowingBottom": "rgba(14, 165, 233, 0)",
-        "belowLineFillColorFallingBottom": "rgba(239, 68, 68, 0)",
-        "symbolActiveColor": "rgba(14, 165, 233, 0.15)",
-        "tabs": [
-            {
-                "title": "Major Pairs",
-                "symbols": [
-                    { "s": "FX:EURUSD", "d": "EUR/USD" },
-                    { "s": "FX:GBPUSD", "d": "GBP/USD" },
-                    { "s": "FX:USDJPY", "d": "USD/JPY" },
-                    { "s": "FX:USDCHF", "d": "USD/CHF" },
-                    { "s": "FX:AUDUSD", "d": "AUD/USD" },
-                    { "s": "FX:NZDUSD", "d": "NZD/USD" },
-                    { "s": "FX:USDCAD", "d": "USD/CAD" }
-                ]
-            },
-            {
-                "title": "Cross Pairs",
-                "symbols": [
-                    { "s": "FX:EURGBP", "d": "EUR/GBP" },
-                    { "s": "FX:EURJPY", "d": "EUR/JPY" },
-                    { "s": "FX:GBPJPY", "d": "GBP/JPY" },
-                    { "s": "FX:EURAUD", "d": "EUR/AUD" },
-                    { "s": "FX:GBPAUD", "d": "GBP/AUD" },
-                    { "s": "FX:AUDJPY", "d": "AUD/JPY" }
-                ]
-            },
-            {
-                "title": "Exotic Pairs",
-                "symbols": [
-                    { "s": "FX:USDTRY", "d": "USD/TRY" },
-                    { "s": "FX:USDMXN", "d": "USD/MXN" },
-                    { "s": "FX:USDZAR", "d": "USD/ZAR" },
-                    { "s": "FX:USDSGD", "d": "USD/SGD" },
-                    { "s": "FX:USDHKD", "d": "USD/HKD" }
-                ]
-            }
-        ]
-    });
-    
-    container.appendChild(script);
-}
-
-// Initialize on load
-window.addEventListener('load', () => {
-    renderPairs();
-    setTimeout(loadMarketOverviewWidget, 800);
-});
+renderPairs();
