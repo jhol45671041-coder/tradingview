@@ -72,7 +72,7 @@ function renderPairs() {
     }
 
     grid.innerHTML = filtered.map(pair => `
-        <div class="pair-card" role="button" tabindex="0" onclick="viewPairChart('${pair.symbol}')" onkeydown="if(event.key==='Enter')viewPairChart('${pair.symbol}')">
+        <div class="pair-card" role="button" tabindex="0" data-symbol="${pair.symbol}">
             <div class="pair-card-header">
                 <span class="pair-name">${pair.name}</span>
                 <span class="pair-badge badge-${pair.category}">${pair.category}</span>
@@ -128,3 +128,12 @@ document.querySelectorAll('.filter-btn').forEach(btn => {
 });
 
 renderPairs();
+
+// Pair card clicks (delegated; no inline handlers)
+(function initPairCards() {
+    const grid = document.getElementById('pairs-grid');
+    if (!grid) return;
+    const open = e => { const c = e.target.closest('.pair-card[data-symbol]'); if (c) viewPairChart(c.dataset.symbol); };
+    grid.addEventListener('click', open);
+    grid.addEventListener('keydown', e => { if (e.key === 'Enter') open(e); });
+})();

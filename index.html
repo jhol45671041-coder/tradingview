@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Forex Pro Calculator &amp; Trading Charts</title>
     <meta name="description" content="Forex Pro Calculator — free pip value, position size, margin, leverage, profit/loss, risk-reward, compounding, Fibonacci and pivot point calculators, live forex session clock, TradingView charts, economic calendar and a trading journal.">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-QMJZLxTabxVdSOvduEfobCFaQtNM7PRUUJFGwkpEexg=' https://s3.tradingview.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src 'self' data: https://fonts.gstatic.com https://cdnjs.cloudflare.com; img-src 'self' data: https:; connect-src 'self' https://open.er-api.com https://*.tradingview.com; frame-src https://*.tradingview.com https://*.tradingview-widget.com https://tradingview-widget.com; object-src 'none'; base-uri 'self'; form-action 'self'">
+    <meta name="referrer" content="strict-origin-when-cross-origin">
     <meta name="theme-color" content="#070b12">
     <script>
         // Apply saved theme before paint to avoid a flash
@@ -175,7 +177,7 @@
                                     <input type="number" id="pip-price" value="1.1000" step="any" inputmode="decimal">
                                 </div>
                             </div>
-                            <button class="btn-calculate" onclick="calculatePip()"><i class="fas fa-calculator"></i> Calculate pip value</button>
+                            <button class="btn-calculate" data-action="calculatePip"><i class="fas fa-calculator"></i> Calculate pip value</button>
                         </div>
                         <div class="calc-result">
                             <h3>Results</h3>
@@ -228,7 +230,7 @@
                                     <select id="lot-pair" class="pair-select" data-include="all"></select>
                                 </div>
                             </div>
-                            <button class="btn-calculate" onclick="calculateLot()"><i class="fas fa-calculator"></i> Calculate lot size</button>
+                            <button class="btn-calculate" data-action="calculateLot"><i class="fas fa-calculator"></i> Calculate lot size</button>
                         </div>
                         <div class="calc-result">
                             <h3>Results</h3>
@@ -277,7 +279,7 @@
                                 <label for="move-lots">Trade size (lots)</label>
                                 <input type="number" id="move-lots" value="1" step="0.01" min="0.01" inputmode="decimal">
                             </div>
-                            <button class="btn-calculate" onclick="calculatePipsMove()"><i class="fas fa-calculator"></i> Calculate profit / loss</button>
+                            <button class="btn-calculate" data-action="calculatePipsMove"><i class="fas fa-calculator"></i> Calculate profit / loss</button>
                         </div>
                         <div class="calc-result">
                             <h3>Results</h3>
@@ -326,7 +328,7 @@
                                 <div class="form-group"><label for="rr-sl">Stop loss price</label><input type="number" id="rr-sl" value="1.0970" step="any" inputmode="decimal"></div>
                                 <div class="form-group"><label for="rr-tp">Take profit price</label><input type="number" id="rr-tp" value="1.1090" step="any" inputmode="decimal"></div>
                             </div>
-                            <button class="btn-calculate" onclick="calculateRR()"><i class="fas fa-calculator"></i> Calculate risk : reward</button>
+                            <button class="btn-calculate" data-action="calculateRR"><i class="fas fa-calculator"></i> Calculate risk : reward</button>
                         </div>
                         <div class="calc-result">
                             <h3>Results</h3>
@@ -368,7 +370,7 @@
                                 </div>
                             </div>
                             <div class="form-group"><label for="margin-price">Current price</label><input type="number" id="margin-price" value="1.1000" step="any" inputmode="decimal"></div>
-                            <button class="btn-calculate" onclick="calculateMargin()"><i class="fas fa-calculator"></i> Calculate margin</button>
+                            <button class="btn-calculate" data-action="calculateMargin"><i class="fas fa-calculator"></i> Calculate margin</button>
                         </div>
                         <div class="calc-result">
                             <h3>Results</h3>
@@ -405,7 +407,7 @@
                                 <div class="form-group"><label for="lev-pair">Currency pair</label><select id="lev-pair" class="pair-select" data-include="all"></select></div>
                                 <div class="form-group"><label for="lev-price">Current price</label><input type="number" id="lev-price" value="1.1000" step="any" inputmode="decimal"></div>
                             </div>
-                            <button class="btn-calculate" onclick="calculateLeverage()"><i class="fas fa-calculator"></i> Calculate leverage</button>
+                            <button class="btn-calculate" data-action="calculateLeverage"><i class="fas fa-calculator"></i> Calculate leverage</button>
                         </div>
                         <div class="calc-result">
                             <h3>Results</h3>
@@ -441,7 +443,7 @@
                                 </div>
                             </div>
                             <div class="form-group"><label for="cmp-deposit">Extra deposit per period ($)</label><input type="number" id="cmp-deposit" value="0" step="10" min="0" inputmode="decimal"></div>
-                            <button class="btn-calculate" onclick="calculateCompound()"><i class="fas fa-calculator"></i> Calculate growth</button>
+                            <button class="btn-calculate" data-action="calculateCompound"><i class="fas fa-calculator"></i> Calculate growth</button>
                         </div>
                         <div class="calc-result">
                             <h3>Results</h3>
@@ -472,7 +474,7 @@
                                 <div class="form-group"><label for="dd-pct">Drawdown (%)</label><input type="number" id="dd-pct" value="20" step="1" min="0" max="99.9" inputmode="decimal"></div>
                             </div>
                             <div class="form-group"><label for="dd-rate">Your average gain per trade / month (%)</label><input type="number" id="dd-rate" value="2" step="0.1" min="0.01" inputmode="decimal"></div>
-                            <button class="btn-calculate" onclick="calculateDrawdown()"><i class="fas fa-calculator"></i> Calculate recovery</button>
+                            <button class="btn-calculate" data-action="calculateDrawdown"><i class="fas fa-calculator"></i> Calculate recovery</button>
                         </div>
                         <div class="calc-result">
                             <h3>Results</h3>
@@ -552,7 +554,7 @@
                                 <label for="fib-decimals">Decimals</label>
                                 <select id="fib-decimals"><option value="2">2 (JPY, gold)</option><option value="3">3 (JPY pairs, silver)</option><option value="4">4</option><option value="5" selected>5 (most pairs)</option></select>
                             </div>
-                            <button class="btn-calculate" onclick="calculateFib()"><i class="fas fa-calculator"></i> Calculate levels</button>
+                            <button class="btn-calculate" data-action="calculateFib"><i class="fas fa-calculator"></i> Calculate levels</button>
                         </div>
                         <div class="calc-result">
                             <h3>Retracement levels</h3>
@@ -583,7 +585,7 @@
                                 <label for="pv-method">Show ladder for</label>
                                 <select id="pv-method"><option value="classic">Classic</option><option value="fibonacci">Fibonacci</option><option value="camarilla">Camarilla</option><option value="woodie">Woodie</option></select>
                             </div>
-                            <button class="btn-calculate" onclick="calculatePivots()"><i class="fas fa-calculator"></i> Calculate pivots</button>
+                            <button class="btn-calculate" data-action="calculatePivots"><i class="fas fa-calculator"></i> Calculate pivots</button>
                         </div>
                         <div class="calc-result">
                             <h3 id="pv-ladder-title">Classic pivots</h3>
@@ -639,7 +641,7 @@
                 </div>
                 <div class="chart-controls">
                     <div class="chart-pair-select">
-                        <select id="chart-pair" class="select" aria-label="Chart symbol" onchange="updateChart()">
+                        <select id="chart-pair" class="select" aria-label="Chart symbol" data-change="updateChart">
                             <optgroup label="Major Pairs">
                                 <option value="FX:EURUSD" selected>EUR/USD</option><option value="FX:GBPUSD">GBP/USD</option><option value="FX:USDJPY">USD/JPY</option>
                                 <option value="FX:USDCHF">USD/CHF</option><option value="FX:AUDUSD">AUD/USD</option><option value="FX:NZDUSD">NZD/USD</option><option value="FX:USDCAD">USD/CAD</option>
@@ -762,7 +764,7 @@
                     </div>
                     <div class="pairs-search">
                         <i class="fas fa-search"></i>
-                        <input type="text" id="pair-search" placeholder="Search pairs…" oninput="filterPairs()" aria-label="Search pairs">
+                        <input type="text" id="pair-search" placeholder="Search pairs…" data-input="filterPairs" aria-label="Search pairs">
                     </div>
                 </div>
                 <div class="pairs-grid" id="pairs-grid"></div>

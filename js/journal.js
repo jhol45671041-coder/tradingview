@@ -3,8 +3,27 @@
 const JOURNAL_KEY = 'fpc-journal-v1';
 let journal = [];
 
+// Validate every stored trade so tampered/old storage can never inject markup or break rendering
+function cleanTrade(t) {
+    if (!t || typeof t !== 'object') return null;
+    const num = v => (typeof v === 'number' && isFinite(v)) ? v : (v == null || v === '' ? null : (isFinite(parseFloat(v)) ? parseFloat(v) : null));
+    const entry = num(t.entry), exit = num(t.exit);
+    if (entry == null || exit == null) return null;
+    return {
+        id: /^[a-z0-9]{1,40}$/i.test(String(t.id)) ? String(t.id) : Date.now().toString(36) + Math.random().toString(36).slice(2, 7),
+        created: num(t.created) || Date.now(),
+        date: /^\d{4}-\d{2}-\d{2}$/.test(String(t.date)) ? String(t.date) : new Date().toLocaleDateString('en-CA'),
+        pair: String(t.pair || 'EURUSD').replace(/[^A-Za-z0-9]/g, '').toUpperCase().slice(0, 12) || 'EURUSD',
+        dir: t.dir === 'sell' ? 'sell' : 'buy',
+        lots: num(t.lots) || 0.01,
+        entry, exit, sl: num(t.sl), tp: num(t.tp),
+        notes: String(t.notes == null ? '' : t.notes).slice(0, 2000),
+        plAuto: !!t.plAuto,
+        pl: num(t.pl) || 0
+    };
+}
 function loadJournal() {
-    try { journal = JSON.parse(localStorage.getItem(JOURNAL_KEY) || '[]') || []; }
+    try { const raw = JSON.parse(localStorage.getItem(JOURNAL_KEY) || '[]'); journal = Array.isArray(raw) ? raw.map(cleanTrade).filter(Boolean) : []; }
     catch (e) { journal = []; }
 }
 function saveJournal() {
@@ -71,7 +90,7 @@ function renderJournal() {
             return `<tr>
                 <td class="mono">${escapeHtml(t.date)}</td>
                 <td class="mono"><b>${escapeHtml(pairLabel(t.pair))}</b></td>
-                <td><span class="dir-tag ${t.dir}">${t.dir}</span></td>
+                <td><span class="dir-tag ${t.dir === 'sell' ? 'sell' : 'buy'}">${t.dir === 'sell' ? 'sell' : 'buy'}</span></td>
                 <td class="num">${formatNumber(t.lots)}</td>
                 <td class="num">${Number(t.entry).toFixed(dec)}</td>
                 <td class="num">${Number(t.exit).toFixed(dec)}</td>
@@ -79,8 +98,8 @@ function renderJournal() {
                 <td class="num ${t.pl >= 0 ? 'up' : 'down'}"><b>${(t.pl > 0 ? '+' : '') + formatCurrency(t.pl)}</b></td>
                 <td class="note-cell" title="${escapeHtml(t.notes)}">${escapeHtml(t.notes) || '<span class="muted">–</span>'}</td>
                 <td><div class="row-actions">
-                    <button type="button" aria-label="Edit trade" title="Edit" onclick="openTradeModal('${t.id}')"><i class="fas fa-pen"></i></button>
-                    <button type="button" class="del" aria-label="Delete trade" title="Delete" onclick="deleteTrade('${t.id}')"><i class="fas fa-trash"></i></button>
+                    <button type="button" aria-label="Edit trade" title="Edit" data-edit="${escapeHtml(t.id)}"><i class="fas fa-pen"></i></button>
+                    <button type="button" class="del" aria-label="Delete trade" title="Delete" data-del="${escapeHtml(t.id)}"><i class="fas fa-trash"></i></button>
                 </div></td>
             </tr>`;
         }).join('');
@@ -135,7 +154,7 @@ function saveTradeFromForm(e) {
         exit: optNum('jf-exit'),
         sl: optNum('jf-sl'),
         tp: optNum('jf-tp'),
-        notes: document.getElementById('jf-notes').value.trim()
+        notes: document.getElementById('jf-notes').value.trim().slice(0, 2000)
     };
     if (t.entry == null || t.exit == null) { toast('Enter both entry and exit prices'); return; }
     const manual = optNum('jf-pl');
@@ -164,7 +183,9 @@ function deleteTrade(id) {
 const CSV_COLS = ['date', 'pair', 'dir', 'lots', 'entry', 'exit', 'sl', 'tp', 'pips', 'pl', 'notes'];
 
 function csvCell(v) {
-    const s = v == null ? '' : String(v);
+    let s = v == null ? '' : String(v);
+    // Stop spreadsheet formula injection (=, +, -, @ at the start of text cells); plain numbers stay as numbers
+    if (/^[=+\-@\t\r]/.test(s) && !/^-?\d+(\.\d+)?$/.test(s)) s = "'" + s;
     return /[",\n\r]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
 }
 
@@ -227,10 +248,12 @@ function importJournalCSV(file) {
                     notes: get('notes') || ''
                 };
                 if (t.entry == null || t.exit == null) return;
+                if (t.notes.startsWith("'")) t.notes = t.notes.slice(1);
                 const pl = n(get('pl'));
                 t.plAuto = pl == null;
-                t.pl = pl == null ? Math.round(autoPL(t) * 100) / 100 : pl;
-                journal.push(t);
+                t.pl = pl == null ? Math.round(autoPL(cleanTrade(t)) * 100) / 100 : pl;
+                const c = cleanTrade(t);
+                if (c) journal.push(c);
                 added++;
             });
             saveJournal();
@@ -252,6 +275,10 @@ function importJournalCSV(file) {
     document.getElementById('j-modal').addEventListener('click', e => { if (e.target.id === 'j-modal') closeTradeModal(); });
     document.addEventListener('keydown', e => { if (e.key === 'Escape') closeTradeModal(); });
     document.getElementById('j-form').addEventListener('submit', saveTradeFromForm);
+    document.getElementById('j-body').addEventListener('click', e => {
+        const ed = e.target.closest('[data-edit]'); if (ed) return openTradeModal(ed.dataset.edit);
+        const dl = e.target.closest('[data-del]'); if (dl) deleteTrade(dl.dataset.del);
+    });
     document.getElementById('j-export').addEventListener('click', exportJournalCSV);
     document.getElementById('j-import').addEventListener('change', e => {
         if (e.target.files[0]) importJournalCSV(e.target.files[0]);

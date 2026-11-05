@@ -110,6 +110,7 @@ function calculateCompound() {
     const periods = Math.min(1000, Math.max(1, Math.round(num('cmp-periods', 12))));
     const deposit = Math.max(0, num('cmp-deposit', 0));
     const unit = document.getElementById('cmp-unit').value;
+    const unitLabel = String(unit).replace(/[^A-Za-z ]/g, '').slice(0, 20);
 
     let bal = start;
     const series = [start];
@@ -119,7 +120,7 @@ function calculateCompound() {
         const gain = s * rate;
         bal = s + gain + deposit;
         series.push(bal);
-        rows.push(`<tr><td>${unit} ${i}</td><td class="num">${formatCurrency(s)}</td><td class="num ${gain >= 0 ? 'up' : 'down'}">${formatCurrency(gain)}</td><td class="num">${formatCurrency(deposit)}</td><td class="num">${formatCurrency(bal)}</td></tr>`);
+        rows.push(`<tr><td>${unitLabel} ${i}</td><td class="num">${formatCurrency(s)}</td><td class="num ${gain >= 0 ? 'up' : 'down'}">${formatCurrency(gain)}</td><td class="num">${formatCurrency(deposit)}</td><td class="num">${formatCurrency(bal)}</td></tr>`);
     }
     const deposits = deposit * periods;
     const profit = bal - start - deposits;
@@ -242,6 +243,13 @@ const FX_API = 'https://open.er-api.com/v6/latest/USD';
 const FX_CACHE_KEY = 'fpc-fx-rates';
 const FX_POPULAR = ['USD', 'EUR', 'GBP', 'JPY', 'CHF', 'AUD', 'CAD', 'NZD', 'PKR', 'AED', 'SAR', 'INR', 'CNY', 'HKD', 'SGD', 'TRY', 'ZAR', 'MXN', 'SEK', 'NOK', 'DKK', 'PLN', 'KWD', 'QAR', 'BDT', 'MYR', 'THB', 'KRW', 'BRL', 'RUB'];
 let fxRates = null;
+// Only accept 3-letter currency codes with positive numeric rates (API/cache data goes into <option> markup)
+function cleanRates(r) {
+    if (!r || typeof r !== 'object') return null;
+    const out = {};
+    for (const k of Object.keys(r)) if (/^[A-Z]{3}$/.test(k) && typeof r[k] === 'number' && isFinite(r[k]) && r[k] > 0) out[k] = r[k];
+    return Object.keys(out).length ? out : null;
+}
 let fxUpdated = null;
 
 function fillConverterSelects() {
@@ -279,8 +287,8 @@ async function loadFxRates(force) {
     try {
         if (!force) {
             const cached = JSON.parse(localStorage.getItem(FX_CACHE_KEY) || 'null');
-            if (cached && cached.rates && Date.now() - cached.fetched < 6 * 3600 * 1000) {
-                fxRates = cached.rates; fxUpdated = cached.updated;
+            if (cached && cleanRates(cached.rates) && Date.now() - cached.fetched < 6 * 3600 * 1000) {
+                fxRates = cleanRates(cached.rates); fxUpdated = Number(cached.updated) || null;
                 onFxReady();
                 return;
             }
@@ -291,9 +299,9 @@ async function loadFxRates(force) {
     try {
         const res = await fetch(FX_API, { cache: 'no-store' });
         const data = await res.json();
-        if (data.result !== 'success' || !data.rates) throw new Error('Bad response');
-        fxRates = data.rates;
-        fxUpdated = data.time_last_update_unix * 1000;
+        if (data.result !== 'success' || !cleanRates(data.rates)) throw new Error('Bad response');
+        fxRates = cleanRates(data.rates);
+        fxUpdated = Number(data.time_last_update_unix) * 1000 || null;
         try { localStorage.setItem(FX_CACHE_KEY, JSON.stringify({ rates: fxRates, updated: fxUpdated, fetched: Date.now() })); } catch (e) {}
         onFxReady();
         if (force && typeof toast === 'function') toast('Exchange rates updated');

@@ -75,6 +75,14 @@ function applyTheme(theme, reloadWidgets) {
     });
     window.addEventListener('hashchange', route);
 
+    // Declarative handlers (no inline on* attributes, so the CSP can forbid inline script)
+    const ACTIONS = ['calculatePip', 'calculateLot', 'calculatePipsMove', 'calculateRR', 'calculateMargin', 'calculateLeverage',
+        'calculateCompound', 'calculateDrawdown', 'calculateFib', 'calculatePivots', 'updateChart', 'filterPairs'];
+    const run = name => { if (ACTIONS.includes(name) && typeof window[name] === 'function') window[name](); };
+    document.addEventListener('click', e => { const el = e.target.closest('[data-action]'); if (el) run(el.dataset.action); });
+    document.addEventListener('change', e => { const el = e.target.closest('[data-change]'); if (el) run(el.dataset.change); });
+    document.addEventListener('input', e => { const el = e.target.closest('[data-input]'); if (el) run(el.dataset.input); });
+
     const y = document.getElementById('year');
     if (y) y.textContent = new Date().getFullYear();
 
